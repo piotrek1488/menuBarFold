@@ -1,0 +1,92 @@
+"settings.section.overview" = "Przegląd";
+"settings.section.behavior" = "Działanie";
+"settings.section.shortcuts" = "Skróty";
+"settings.section.about" = "O aplikacji";
+
+"overview.title" = "Spokojniejszy pasek menu";
+"overview.subtitle" = "Najważniejsze ikony zostają pod ręką, a resztę możesz zwinąć.";
+"overview.hiddenApps" = "Ukryte aplikacje";
+"overview.alwaysHiddenApps" = "Zawsze ukryte";
+
+"permission.title" = "Potrzebny jest dostęp Accessibility";
+"permission.explanation" = "MenuBarFold odczytuje wyłącznie położenie ikon i aplikacje, do których należą. Nie czyta ekranu, klawiszy, plików ani zawartości menu.";
+"permission.request" = "Przyznaj dostęp";
+"permission.openSettings" = "Otwórz Ustawienia systemowe";
+
+"status.expanded" = "Pasek menu jest rozwinięty";
+"status.expanded.detail" = "Zwykła ukryta sekcja jest teraz widoczna.";
+"status.arranging" = "Tryb układania";
+"status.arranging.detail" = "Przytrzymaj Command i przeciągaj ikony przez strzałkę MenuBarFold.";
+"status.scanning" = "Odczytywanie układu paska";
+"status.scanning.detail" = "MenuBarFold sprawdza, do której sekcji należy każda aplikacja.";
+"status.collapsed" = "Pasek menu jest zwinięty";
+"status.collapsed.detail" = "Aplikacje umieszczone po lewej stronie strzałki są ukryte.";
+"status.pausedForCapture" = "Tymczasowo rozwinięty dla prywatności";
+"status.pausedForCapture.detail" = "Mikrofon lub kamera jest aktywna, więc MenuBarFold zachowuje systemowe wskaźniki prywatności.";
+"status.needsAccessibility" = "Oczekiwanie na uprawnienie";
+"status.needsAccessibility.detail" = "Przyznaj dostęp Accessibility, a potem wróć tutaj i ułóż ikony.";
+"status.unavailable" = "Ukrywanie jest niedostępne";
+"status.unavailable.detail" = "MenuBarFold zostawił cały pasek widoczny, żeby nie ukryć niewłaściwych ikon.";
+
+"action.expand" = "Rozwiń";
+"action.collapse" = "Zwiń";
+
+"setup.title" = "Konfiguracja w trzech krokach";
+"setup.step1.title" = "Przyznaj dostęp Accessibility";
+"setup.step1.detail" = "Dzięki temu MenuBarFold rozpozna aplikację, do której należy każda ikona.";
+"setup.step2.title" = "Ułóż sekcje";
+"setup.step2.detail" = "Przytrzymaj Command i przeciągnij ikony w lewo od strzałki, aby je ukryć, albo w prawo, aby zostały widoczne.";
+"setup.step3.title" = "Kliknij strzałkę";
+"setup.step3.detail" = "Strzałka zwija i rozwija wybraną sekcję paska menu.";
+"setup.arrange" = "Ułóż ikony";
+"setup.finish" = "Zakończ konfigurację";
+
+"behavior.general" = "Ogólne";
+"behavior.launchAtLogin" = "Uruchamiaj MenuBarFold po zalogowaniu";
+"behavior.showSettingsOnLaunch" = "Pokazuj to okno po uruchomieniu";
+"behavior.language" = "Język";
+"language.system" = "Domyślny systemowy";
+"behavior.collapse" = "Automatyczne działanie";
+"behavior.autoCollapse" = "Zwijaj automatycznie po rozwinięciu";
+"behavior.delay" = "Opóźnienie";
+"behavior.seconds" = "%d s";
+"behavior.hoverReveal" = "Rozwijaj po najechaniu na pasek menu";
+"behavior.sections" = "Sekcje";
+"behavior.alwaysHidden" = "Włącz sekcję zawsze ukrytą";
+"behavior.alwaysHidden.help" = "Drugi znacznik tworzy sekcję, która pozostaje ukryta także po rozwinięciu zwykłej sekcji. Ustaw ją przyciskiem Ułóż ikony.";
+"behavior.privacy" = "Wskaźniki prywatności";
+"behavior.captureProtection" = "Pokazuj cały pasek, gdy działa mikrofon lub kamera";
+"behavior.captureProtection.help" = "Zalecane. Tryb assessment w macOS 27 ukrywa szeroki wskaźnik użycia kamery i mikrofonu. MenuBarFold tymczasowo zwalnia ograniczenie, aby wskaźnik pozostał widoczny.";
+
+"shortcut.title" = "Skrót globalny";
+"shortcut.help" = "Skrót działa w każdej aplikacji i wykonuje to samo co kliknięcie strzałki.";
+"shortcut.toggle" = "Zwiń lub rozwiń";
+"shortcut.preset.disabled" = "Wyłączony";
+"shortcut.preset.optionCommandH" = "Option + Command + H";
+"shortcut.preset.controlOptionM" = "Control + Option + M";
+"shortcut.preset.function18" = "Klawisz funkcyjny F18";
+"shortcut.menuBar" = "Sterowanie z paska menu";
+"shortcut.leftClick" = "Lewy klik strzałki";
+"shortcut.leftClick.value" = "Zwiń lub rozwiń";
+"shortcut.rightClick" = "Prawy klik strzałki";
+"shortcut.rightClick.value" = "Otwórz szybkie menu";
+"shortcut.optionClick" = "Option + klik strzałki";
+"shortcut.optionClick.value" = "Ułóż ikony";
+"shortcut.commandDrag" = "Command + przeciągnięcie";
+"shortcut.commandDrag.value" = "Przenieś ikonę między sekcjami";
+
+"menu.expand" = "Rozwiń pasek menu";
+"menu.collapse" = "Zwiń pasek menu";
+"menu.arrange" = "Ułóż ikony";
+"menu.autoCollapse" = "Automatyczne zwijanie";
+"menu.settings" = "Ustawienia…";
+"menu.quit" = "Zakończ MenuBarFold";
+
+"about.tagline" = "Uporządkowany pasek menu w macOS 27";
+"about.version" = "Wersja 0.1.0";
+"about.privacy.title" = "Wszystko zostaje na Macu";
+"about.privacy.detail" = "MenuBarFold nie ma kodu sieciowego, analityki, konta, dostępu do plików ani procesów pomocniczych. Dane Accessibility są używane wyłącznie w pamięci do ustalenia położenia ikon.";
+"about.macos27.title" = "Dlaczego tej wersji nie będzie w App Store";
+"about.macos27.detail" = "macOS 27 udostępnia filtrowanie ikon jedynie przez prywatny framework systemowy powiązany z trybem assessment. MenuBarFold ładuje go dynamicznie i pokazuje cały pasek, jeśli Apple go zmieni. Wymaga to bezpośrednio dystrybuowanej aplikacji bez sandboxa.";
+"about.acknowledgements.title" = "Podziękowania";
+"about.acknowledgements.detail" = "Mechanizm widoczności w macOS 27 i zasady bezpieczeństwa zostały opracowane na podstawie projektu Hidden Bar na licencji MIT. MenuBarFold jest niezależną implementacją w SwiftUI i AppKit.";

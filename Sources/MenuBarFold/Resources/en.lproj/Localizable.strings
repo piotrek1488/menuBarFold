@@ -1,0 +1,92 @@
+"settings.section.overview" = "Overview";
+"settings.section.behavior" = "Behavior";
+"settings.section.shortcuts" = "Shortcuts";
+"settings.section.about" = "About";
+
+"overview.title" = "A quieter menu bar";
+"overview.subtitle" = "Keep useful items close and fold the rest away.";
+"overview.hiddenApps" = "Hidden apps";
+"overview.alwaysHiddenApps" = "Always hidden";
+
+"permission.title" = "Accessibility permission is required";
+"permission.explanation" = "MenuBarFold reads only the positions and owning apps of menu bar items. It does not read your screen, keystrokes, files, or menu contents.";
+"permission.request" = "Grant Access";
+"permission.openSettings" = "Open System Settings";
+
+"status.expanded" = "Menu bar expanded";
+"status.expanded.detail" = "Your regular hidden section is visible.";
+"status.arranging" = "Arrangement mode";
+"status.arranging.detail" = "Hold Command and drag icons across the MenuBarFold arrow.";
+"status.scanning" = "Reading menu bar layout";
+"status.scanning.detail" = "MenuBarFold is checking which apps belong in each section.";
+"status.collapsed" = "Menu bar folded";
+"status.collapsed.detail" = "Apps placed to the left of the arrow are hidden.";
+"status.pausedForCapture" = "Temporarily expanded for privacy";
+"status.pausedForCapture.detail" = "A microphone or camera is active, so MenuBarFold is preserving macOS privacy indicators.";
+"status.needsAccessibility" = "Waiting for permission";
+"status.needsAccessibility.detail" = "Grant Accessibility access, then return here to arrange your icons.";
+"status.unavailable" = "Hiding is unavailable";
+"status.unavailable.detail" = "MenuBarFold left the full menu bar visible to avoid hiding the wrong items.";
+
+"action.expand" = "Expand";
+"action.collapse" = "Fold";
+
+"setup.title" = "Set up in three steps";
+"setup.step1.title" = "Grant Accessibility access";
+"setup.step1.detail" = "This lets MenuBarFold identify which app owns each menu bar item.";
+"setup.step2.title" = "Arrange your sections";
+"setup.step2.detail" = "Hold Command and drag icons left of the arrow to hide them, or right to keep them visible.";
+"setup.step3.title" = "Click the arrow";
+"setup.step3.detail" = "The arrow folds and unfolds your chosen menu bar section.";
+"setup.arrange" = "Arrange Icons";
+"setup.finish" = "Finish Setup";
+
+"behavior.general" = "General";
+"behavior.launchAtLogin" = "Launch MenuBarFold at login";
+"behavior.showSettingsOnLaunch" = "Show this window at launch";
+"behavior.language" = "Language";
+"language.system" = "System Default";
+"behavior.collapse" = "Automatic behavior";
+"behavior.autoCollapse" = "Fold automatically after expanding";
+"behavior.delay" = "Delay";
+"behavior.seconds" = "%d seconds";
+"behavior.hoverReveal" = "Expand after hovering over the menu bar";
+"behavior.sections" = "Sections";
+"behavior.alwaysHidden" = "Enable an always-hidden section";
+"behavior.alwaysHidden.help" = "A second marker creates a section that stays hidden even while the regular hidden section is expanded. Use Arrange Icons to place it.";
+"behavior.privacy" = "Privacy indicators";
+"behavior.captureProtection" = "Show the full menu bar while a microphone or camera is active";
+"behavior.captureProtection.help" = "Recommended. macOS 27 assessment mode hides the wide camera and microphone activity capsule. MenuBarFold temporarily releases its restriction so that indicator remains visible.";
+
+"shortcut.title" = "Global shortcut";
+"shortcut.help" = "The shortcut works in every app and toggles the same action as clicking the arrow.";
+"shortcut.toggle" = "Fold or expand";
+"shortcut.preset.disabled" = "Disabled";
+"shortcut.preset.optionCommandH" = "Option + Command + H";
+"shortcut.preset.controlOptionM" = "Control + Option + M";
+"shortcut.preset.function18" = "Function key F18";
+"shortcut.menuBar" = "Menu bar controls";
+"shortcut.leftClick" = "Left-click arrow";
+"shortcut.leftClick.value" = "Fold or expand";
+"shortcut.rightClick" = "Right-click arrow";
+"shortcut.rightClick.value" = "Open quick menu";
+"shortcut.optionClick" = "Option-click arrow";
+"shortcut.optionClick.value" = "Arrange icons";
+"shortcut.commandDrag" = "Command-drag icon";
+"shortcut.commandDrag.value" = "Move between sections";
+
+"menu.expand" = "Expand Menu Bar";
+"menu.collapse" = "Fold Menu Bar";
+"menu.arrange" = "Arrange Icons";
+"menu.autoCollapse" = "Auto Fold";
+"menu.settings" = "Settings…";
+"menu.quit" = "Quit MenuBarFold";
+
+"about.tagline" = "A focused menu bar for macOS 27";
+"about.version" = "Version 0.1.0";
+"about.privacy.title" = "Local by design";
+"about.privacy.detail" = "MenuBarFold has no network code, analytics, account, file access, or subprocesses. Accessibility data is used in memory only to classify menu bar item positions.";
+"about.macos27.title" = "Why this build is outside the App Store";
+"about.macos27.detail" = "macOS 27 exposes icon filtering only through a private system framework tied to assessment mode. MenuBarFold loads it at runtime and fails open if Apple changes it. This requires a direct, non-sandboxed build.";
+"about.acknowledgements.title" = "Acknowledgements";
+"about.acknowledgements.detail" = "The macOS 27 visibility technique and safety findings were informed by the MIT-licensed Hidden Bar project. MenuBarFold is an independent SwiftUI and AppKit implementation.";
