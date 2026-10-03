@@ -2,7 +2,7 @@
 
 MenuBarFold is a native macOS 27 menu bar utility. It lets you decide which third-party menu bar apps stay visible, which appear only when expanded, and which remain hidden.
 
-The app is written from scratch in Swift, SwiftUI, and AppKit. English is the fallback language, Polish is included, and the language can be changed inside the app.
+The app is written from scratch in Swift, SwiftUI, and AppKit. English is the default language, Polish is included, and the language can be changed inside the app or set to follow macOS.
 
 > [Polska wersja README](docs/README.pl.md)
 

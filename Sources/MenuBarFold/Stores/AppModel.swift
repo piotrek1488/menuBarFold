@@ -119,7 +119,7 @@ final class AppModel {
       Key.showSettingsOnLaunch: true,
       Key.alwaysHiddenEnabled: false,
       Key.protectCaptureIndicators: true,
-      Key.language: AppLanguage.system.rawValue,
+      Key.language: AppLanguage.english.rawValue,
       Key.shortcutPreset: ShortcutPreset.optionCommandH.rawValue,
       Key.launchAtLogin: false,
     ])
@@ -132,7 +132,7 @@ final class AppModel {
     showSettingsOnLaunch = defaults.bool(forKey: Key.showSettingsOnLaunch)
     alwaysHiddenEnabled = defaults.bool(forKey: Key.alwaysHiddenEnabled)
     protectCaptureIndicators = defaults.bool(forKey: Key.protectCaptureIndicators)
-    language = AppLanguage(rawValue: defaults.string(forKey: Key.language) ?? "") ?? .system
+    language = AppLanguage(rawValue: defaults.string(forKey: Key.language) ?? "") ?? .english
     shortcutPreset =
       ShortcutPreset(rawValue: defaults.string(forKey: Key.shortcutPreset) ?? "") ?? .optionCommandH
     isAccessibilityGranted = AXIsProcessTrusted()

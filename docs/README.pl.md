@@ -1,6 +1,6 @@
 # MenuBarFold
 
-MenuBarFold to natywna aplikacja dla macOS 27, która porządkuje ikony na górnym pasku. Użytkownik sam wybiera, które aplikacje mają być zawsze widoczne, które pojawiają się dopiero po rozwinięciu i które mają pozostać ukryte.
+MenuBarFold to natywna aplikacja dla macOS 27, która porządkuje ikony na górnym pasku. Użytkownik sam wybiera, które aplikacje mają być zawsze widoczne, które pojawiają się dopiero po rozwinięciu i które mają pozostać ukryte. Domyślnym językiem jest angielski; w ustawieniach można wybrać polski albo język systemu.
 
 ## Co potrafi
 
