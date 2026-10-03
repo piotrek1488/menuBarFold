@@ -32,6 +32,7 @@ This is a direct-distribution app. The native visibility service is a private fr
 - macOS 27.0 or later. The source compiles against macOS 14+ for CI, but the packaged app declares macOS 27 as its minimum runtime.
 - Accessibility permission.
 - The app must be distributed outside the Mac App Store and remain unsandboxed.
+- MenuBarFold must run from the system `/Applications` folder. On macOS 27, MenuBarAgent ignores the app's own allow-list entry when icon filtering is activated by a copy outside that folder, which would hide the controls together with the managed icons. MenuBarFold refuses to activate filtering from any other location.
 - A stable code-signing identity is required for Accessibility authorization to survive rebuilds. The build script automatically uses the first valid code-signing certificate in your keychain. You can choose one explicitly with `CODE_SIGN_IDENTITY="Apple Development: Name (TEAMID)"`.
 - If no certificate is available, the script falls back to ad-hoc signing and prints a warning. In that mode macOS can treat every rebuild as a different app even when the old entry still looks enabled in System Settings.
 - For normal use, keep one signed copy in `/Applications`; do not run an additional development copy at the same time.
@@ -46,7 +47,7 @@ cd MenuBarFold
 ./script/build_and_run.sh --verify
 ```
 
-The script builds a real app bundle at `dist/MenuBarFold.app`, copies localized resources, generates the app icon, applies the first available persistent development signature (with a clearly marked ad-hoc fallback), launches the app, and verifies its process.
+The script builds a real app bundle at `dist/MenuBarFold.app`, copies localized resources, generates the app icon, applies the first available persistent development signature (with a clearly marked ad-hoc fallback), installs that exact signed bundle as `/Applications/MenuBarFold.app`, launches it from there, and verifies its process.
 
 Other useful commands:
 
@@ -91,7 +92,7 @@ See [Architecture](docs/ARCHITECTURE.md), [Release guide](docs/RELEASING.md), an
 
 ## Attribution
 
-The macOS 27 assessment-mode visibility technique and several safety observations were informed by the MIT-licensed [Hidden Bar](https://github.com/dwarvesf/hidden) project. MenuBarFold is an independent implementation. The original license notice is preserved in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+The macOS 27 assessment-mode visibility technique and several safety observations were informed by the MIT-licensed [Hidden Bar](https://github.com/dwarvesf/hidden) and [MenuBarHider](https://github.com/happy666End/MenuBarHider) projects. MenuBarFold is an independent implementation. The original license notices are preserved in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 ## License
 

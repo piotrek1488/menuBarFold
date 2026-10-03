@@ -1,6 +1,6 @@
 # Release guide
 
-The development script uses an ad-hoc signature. Public downloads should instead use a stable Developer ID identity so Accessibility permission survives updates and Gatekeeper can validate the app.
+The development script prefers a persistent certificate from the local keychain and falls back to an ad-hoc signature only when no suitable identity is available. Public downloads should use a stable Developer ID identity so Accessibility permission survives updates and Gatekeeper can validate the app.
 
 ## Before the first public build
 
@@ -21,6 +21,7 @@ codesign -d --entitlements - dist/MenuBarFold.app
 The entitlements output must not contain `com.apple.security.app-sandbox`. Test on a clean user account and verify:
 
 - first-run Accessibility onboarding;
+- installation and relaunch from `/Applications` before filtering is enabled;
 - visible, hidden, and always-hidden placement;
 - expand, collapse, auto fold, hover and global shortcut;
 - microphone and camera safety pause;

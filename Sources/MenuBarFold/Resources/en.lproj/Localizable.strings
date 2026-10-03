@@ -14,6 +14,13 @@
 "permission.openSettings" = "Open System Settings";
 "permission.troubleshooting" = "If MenuBarFold is already enabled there but still waits for permission, remove the old MenuBarFold entry, add this copy again, and relaunch it. This is required once after replacing an ad-hoc build with a persistently signed build.";
 
+"installation.title" = "Install MenuBarFold in Applications?";
+"installation.explanation" = "macOS 27 hides MenuBarFold's own arrows whenever icon filtering is activated by an app running outside /Applications. MenuBarFold must install and relaunch its signed copy there before hiding icons.";
+"installation.install" = "Install and Relaunch";
+"installation.notNow" = "Not Now";
+"installation.error.title" = "MenuBarFold could not be installed";
+"installation.error.detail" = "%@\n\nYou can also drag MenuBarFold.app into the system Applications folder.";
+
 "status.expanded" = "Menu bar expanded";
 "status.expanded.detail" = "Your regular hidden section is visible.";
 "status.arranging" = "Arrangement mode";
@@ -95,4 +102,4 @@
 "about.macos27.title" = "Why this build is outside the App Store";
 "about.macos27.detail" = "macOS 27 exposes icon filtering only through a private system framework tied to assessment mode. MenuBarFold loads it at runtime and fails open if Apple changes it. This requires a direct, non-sandboxed build.";
 "about.acknowledgements.title" = "Acknowledgements";
-"about.acknowledgements.detail" = "The macOS 27 visibility technique and safety findings were informed by the MIT-licensed Hidden Bar project. MenuBarFold is an independent SwiftUI and AppKit implementation.";
+"about.acknowledgements.detail" = "The macOS 27 visibility technique and safety findings were informed by the MIT-licensed Hidden Bar and MenuBarHider projects. MenuBarFold is an independent SwiftUI and AppKit implementation.";

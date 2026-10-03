@@ -9,6 +9,7 @@ MIN_SYSTEM_VERSION="27.0"
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DIST_DIR="$ROOT_DIR/dist"
 APP_BUNDLE="$DIST_DIR/$APP_NAME.app"
+INSTALLED_APP_BUNDLE="/Applications/$APP_NAME.app"
 APP_CONTENTS="$APP_BUNDLE/Contents"
 APP_MACOS="$APP_CONTENTS/MacOS"
 APP_RESOURCES="$APP_CONTENTS/Resources"
@@ -119,8 +120,18 @@ PLIST
   sign_app
 }
 
+install_app() {
+  local staging_bundle="/Applications/.$APP_NAME-installing-$$.app"
+  /bin/rm -rf "$staging_bundle"
+  /usr/bin/ditto "$APP_BUNDLE" "$staging_bundle"
+  codesign --verify --deep --strict "$staging_bundle"
+  /bin/rm -rf "$INSTALLED_APP_BUNDLE"
+  /bin/mv "$staging_bundle" "$INSTALLED_APP_BUNDLE"
+  echo "Installed $APP_NAME: $INSTALLED_APP_BUNDLE"
+}
+
 open_app() {
-  /usr/bin/open "$APP_BUNDLE"
+  /usr/bin/open "$INSTALLED_APP_BUNDLE"
 }
 
 pkill -x "$APP_NAME" >/dev/null 2>&1 || true
@@ -128,32 +139,38 @@ pkill -x "$APP_NAME" >/dev/null 2>&1 || true
 case "$MODE" in
   run)
     build_app
+    install_app
     open_app
     ;;
   --debug|debug)
     build_app
-    lldb -- "$APP_BINARY"
+    install_app
+    lldb -- "$INSTALLED_APP_BUNDLE/Contents/MacOS/$APP_NAME"
     ;;
   --logs|logs)
     build_app
+    install_app
     open_app
     /usr/bin/log stream --info --style compact --predicate "process == \"$APP_NAME\""
     ;;
   --telemetry|telemetry)
     build_app
+    install_app
     open_app
     /usr/bin/log stream --info --style compact --predicate "subsystem == \"$BUNDLE_ID\" OR process == \"$APP_NAME\""
     ;;
   --verify|verify)
     build_app
+    install_app
     open_app
     sleep 2
     pgrep -x "$APP_NAME" >/dev/null
-    echo "$APP_NAME launched successfully: $APP_BUNDLE"
+    echo "$APP_NAME launched successfully: $INSTALLED_APP_BUNDLE"
     ;;
   --diagnose|diagnose)
     build_app
-    "$APP_BINARY" --diagnose
+    install_app
+    "$INSTALLED_APP_BUNDLE/Contents/MacOS/$APP_NAME" --diagnose
     ;;
   --test|test)
     swift test --disable-sandbox

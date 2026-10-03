@@ -119,7 +119,7 @@ final class AppModel {
       Key.autoCollapseDelay: 10.0,
       Key.hoverToRevealEnabled: false,
       Key.showSettingsOnLaunch: true,
-      Key.alwaysHiddenEnabled: false,
+      Key.alwaysHiddenEnabled: true,
       Key.protectCaptureIndicators: true,
       Key.language: AppLanguage.english.rawValue,
       Key.shortcutPreset: ShortcutPreset.optionCommandH.rawValue,

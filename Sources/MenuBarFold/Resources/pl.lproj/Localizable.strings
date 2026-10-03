@@ -14,6 +14,13 @@
 "permission.openSettings" = "Otwórz Ustawienia systemowe";
 "permission.troubleshooting" = "Jeżeli MenuBarFold jest już włączony, ale nadal czeka na uprawnienie, usuń stary wpis MenuBarFold, dodaj ponownie tę kopię i uruchom ją jeszcze raz. Jest to potrzebne tylko raz po przejściu z podpisu tymczasowego na stały.";
 
+"installation.title" = "Zainstalować MenuBarFold w Aplikacjach?";
+"installation.explanation" = "macOS 27 ukrywa także strzałki MenuBarFold, jeżeli filtrowanie ikon włączy aplikacja uruchomiona spoza systemowego katalogu /Applications. Przed ukrywaniem ikon MenuBarFold musi zainstalować i ponownie uruchomić podpisaną kopię w tym katalogu.";
+"installation.install" = "Zainstaluj i uruchom ponownie";
+"installation.notNow" = "Nie teraz";
+"installation.error.title" = "Nie udało się zainstalować MenuBarFold";
+"installation.error.detail" = "%@\n\nMożesz również przeciągnąć MenuBarFold.app do systemowego katalogu Aplikacje.";
+
 "status.expanded" = "Pasek menu jest rozwinięty";
 "status.expanded.detail" = "Zwykła ukryta sekcja jest teraz widoczna.";
 "status.arranging" = "Tryb układania";
@@ -95,4 +102,4 @@
 "about.macos27.title" = "Dlaczego tej wersji nie będzie w App Store";
 "about.macos27.detail" = "macOS 27 udostępnia filtrowanie ikon jedynie przez prywatny framework systemowy powiązany z trybem assessment. MenuBarFold ładuje go dynamicznie i pokazuje cały pasek, jeśli Apple go zmieni. Wymaga to bezpośrednio dystrybuowanej aplikacji bez sandboxa.";
 "about.acknowledgements.title" = "Podziękowania";
-"about.acknowledgements.detail" = "Mechanizm widoczności w macOS 27 i zasady bezpieczeństwa zostały opracowane na podstawie projektu Hidden Bar na licencji MIT. MenuBarFold jest niezależną implementacją w SwiftUI i AppKit.";
+"about.acknowledgements.detail" = "Mechanizm widoczności w macOS 27 i zasady bezpieczeństwa zostały opracowane na podstawie projektów Hidden Bar i MenuBarHider na licencji MIT. MenuBarFold jest niezależną implementacją w SwiftUI i AppKit.";

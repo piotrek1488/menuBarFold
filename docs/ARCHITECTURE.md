@@ -35,6 +35,7 @@ The Objective-C bridge uses runtime class and selector lookup. There is no link-
 ## Safety invariants
 
 - **Fail open:** every error invalidates the active assertion before it reports a problem.
+- **Supported location:** filtering is never activated unless the running bundle is below the system `/Applications` folder. This preserves MenuBarFold's own allow-listed controls on macOS 27.
 - **Generation tokens:** stale Accessibility scans and late private-framework callbacks cannot overwrite a newer user action.
 - **No uncertain geometry:** an item outside known display coordinates invalidates the whole snapshot.
 - **Per-display projection:** boundary positions are projected by their distance from each display's visible menu bar edge.
@@ -48,4 +49,4 @@ Accessibility is used only to obtain the owner bundle identifier and frame of `A
 
 ## Distribution constraints
 
-The application must be unsandboxed because Accessibility access to other apps and the native macOS 27 visibility service do not work in an App Store sandbox. Release artifacts should use Hardened Runtime, Developer ID signing, notarization, and stapling. No private entitlements are required.
+The application must be unsandboxed because Accessibility access to other apps and the native macOS 27 visibility service do not work in an App Store sandbox. It must also run from the system `/Applications` folder because MenuBarAgent does not preserve the controlling app's own status items for copies launched elsewhere. Release artifacts should use Hardened Runtime, Developer ID signing, notarization, and stapling. No private entitlements are required.

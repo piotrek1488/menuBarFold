@@ -7,6 +7,7 @@ enum DiagnosticRunner {
     let bridgeAvailable = NativeVisibilityClient().isAvailable
     let accessibilityGranted = AXIsProcessTrusted()
     let isBundled = Bundle.main.bundleURL.pathExtension == "app"
+    let isInApplications = ApplicationLocation.isSupported(Bundle.main.bundleURL)
 
     print("MenuBarFold diagnostics")
     print("macOS: \(version)")
@@ -15,5 +16,6 @@ enum DiagnosticRunner {
     print("Running as app bundle: \(isBundled ? "yes" : "no")")
     print("Bundle path: \(Bundle.main.bundleURL.path)")
     print("Bundle identifier: \(Bundle.main.bundleIdentifier ?? "unknown")")
+    print("Supported application location: \(isInApplications ? "yes" : "no")")
   }
 }

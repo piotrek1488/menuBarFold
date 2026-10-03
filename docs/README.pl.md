@@ -18,11 +18,12 @@ MenuBarFold to natywna aplikacja dla macOS 27, która porządkuje ikony na górn
 
 ## Jak używać
 
-1. Uruchom aplikację i przyznaj jej dostęp w `Ustawienia systemowe → Prywatność i bezpieczeństwo → Dostępność`.
-2. Przytrzymaj `Command` i ustaw ikony zawsze ukryte po lewej stronie separatora `|`.
-3. Zwykłe ukryte ikony ustaw między separatorem `|` i główną strzałką, a widoczne ikony po prawej stronie głównej strzałki.
-4. Główna strzałka `<` rozwija zwykłe ukryte ikony. Po rozwinięciu zmienia się w `>` i pojawia się druga strzałka sterująca sekcją zawsze ukrytą.
-5. Kliknij strzałkę prawym przyciskiem, aby otworzyć szybkie menu. `Option + klik` włącza tryb układania.
+1. Umieść aplikację w systemowym katalogu `/Applications` (czyli `Aplikacje`) i uruchom ją stamtąd. Jest to wymagane w macOS 27; kopia uruchomiona z innego katalogu nie włączy ukrywania, aby nie zniknęły jej własne przyciski.
+2. Przyznaj jej dostęp w `Ustawienia systemowe → Prywatność i bezpieczeństwo → Dostępność`.
+3. Przytrzymaj `Command` i ustaw ikony zawsze ukryte po lewej stronie separatora `|`.
+4. Zwykłe ukryte ikony ustaw między separatorem `|` i główną strzałką, a widoczne ikony po prawej stronie głównej strzałki.
+5. Główna strzałka `<` rozwija zwykłe ukryte ikony. Po rozwinięciu zmienia się w `>` i pojawia się druga strzałka sterująca sekcją zawsze ukrytą.
+6. Kliknij strzałkę prawym przyciskiem, aby otworzyć szybkie menu. `Option + klik` włącza tryb układania.
 
 ## Budowanie
 
@@ -32,7 +33,7 @@ Projekt był testowany na macOS 27.0.1, Xcode 27 i Swift 6.4.
 ./script/build_and_run.sh --verify
 ```
 
-Gotowa aplikacja powstanie w `dist/MenuBarFold.app`. Skrypt tworzy pakiet `.app`, kopiuje tłumaczenia, generuje ikonę, podpisuje wersję deweloperską i sprawdza, czy proces się uruchomił.
+Gotowa aplikacja powstanie w `dist/MenuBarFold.app`. Skrypt tworzy pakiet `.app`, kopiuje tłumaczenia, generuje ikonę, podpisuje wersję deweloperską, instaluje tę samą podpisaną kopię jako `/Applications/MenuBarFold.app` i sprawdza, czy proces się uruchomił.
 
 Testy i diagnostyka:
 

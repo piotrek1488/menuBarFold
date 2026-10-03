@@ -27,6 +27,31 @@ final class NativeMenuBarEngineTests: XCTestCase {
     XCTAssertFalse(boundary.areAlwaysHiddenControlsVisible)
   }
 
+  func testOutsideApplicationsFailsOpenWithoutHidingOwnControls() {
+    let inventory = InventoryMock(isAuthorized: true, items: [])
+    let visibility = VisibilityMock()
+    let capture = CaptureMock(isActive: false)
+    let boundary = BoundaryMock()
+    let engine = makeEngine(
+      inventory: inventory,
+      visibility: visibility,
+      capture: capture,
+      boundary: boundary,
+      isSupportedApplicationLocation: false
+    )
+    var latest: MenuBarEngineSnapshot?
+    engine.onSnapshot = { latest = $0 }
+
+    engine.collapse()
+
+    XCTAssertTrue(visibility.activations.isEmpty)
+    XCTAssertFalse(boundary.areAlwaysHiddenControlsVisible)
+    guard let latest, case .unavailable(let message) = latest.status else {
+      return XCTFail("Expected an unavailable state outside /Applications")
+    }
+    XCTAssertTrue(message.contains("/Applications"))
+  }
+
   func testCollapseAllowsOnlyVisibleBundlesAndOwnBundle() {
     let inventory = InventoryMock(
       isAuthorized: true,
@@ -201,13 +226,17 @@ final class NativeMenuBarEngineTests: XCTestCase {
       MenuBarControlAppearance.chevronSymbol(isExpanded: true),
       "chevron.right"
     )
+    let separator = MenuBarControlAppearance.separatorImage()
+    XCTAssertEqual(separator.size, NSSize(width: 3, height: 16))
+    XCTAssertTrue(separator.isTemplate)
   }
 
   private func makeEngine(
     inventory: InventoryMock,
     visibility: VisibilityMock,
     capture: CaptureMock,
-    boundary: BoundaryMock
+    boundary: BoundaryMock,
+    isSupportedApplicationLocation: Bool = true
   ) -> NativeMenuBarEngine {
     let display = MenuBarDisplay(
       identifier: "main",
@@ -221,7 +250,8 @@ final class NativeMenuBarEngineTests: XCTestCase {
       ownBundleIdentifier: "own.app",
       displays: { [display] },
       isLeftToRight: { true },
-      isSupportedOperatingSystem: { true }
+      isSupportedOperatingSystem: { true },
+      isSupportedApplicationLocation: { isSupportedApplicationLocation }
     )
     engine.boundaryProvider = boundary
     return engine

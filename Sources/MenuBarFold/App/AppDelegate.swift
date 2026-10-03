@@ -10,6 +10,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
   func applicationDidFinishLaunching(_ notification: Notification) {
     guard ensureSingleInstance() else { return }
 
+    if !ApplicationLocation.isSupported(Bundle.main.bundleURL),
+      ApplicationsInstaller.offerInstallation(language: model.language)
+    {
+      return
+    }
+
     if let iconURL = Bundle.main.url(forResource: "MenuBarFold", withExtension: "png"),
       let icon = NSImage(contentsOf: iconURL)
     {
@@ -51,6 +57,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
           && $0.bundleIdentifier == ownBundleIdentifier
       })
     else {
+      return true
+    }
+
+    if ApplicationLocation.shouldSupersede(
+      existingBundleURL: existing.bundleURL,
+      with: Bundle.main.bundleURL
+    ) {
+      existing.terminate()
       return true
     }
 

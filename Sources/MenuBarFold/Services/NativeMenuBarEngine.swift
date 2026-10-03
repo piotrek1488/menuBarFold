@@ -1,5 +1,6 @@
 import AppKit
 import Foundation
+import OSLog
 
 @MainActor
 protocol MenuBarBoundaryProviding: AnyObject {
@@ -19,6 +20,11 @@ struct MenuBarEngineSnapshot: Equatable {
 
 @MainActor
 final class NativeMenuBarEngine {
+  private static let logger = Logger(
+    subsystem: Bundle.main.bundleIdentifier ?? "io.github.menubarfold.MenuBarFold",
+    category: "MenuBar"
+  )
+
   private enum Presentation {
     case collapsed
     case expanded
@@ -38,6 +44,7 @@ final class NativeMenuBarEngine {
   private let displays: () -> [MenuBarDisplay]
   private let isLeftToRight: () -> Bool
   private let isSupportedOperatingSystem: () -> Bool
+  private let isSupportedApplicationLocation: () -> Bool
 
   private var presentation: Presentation = .expanded
   private var cachedLayout: MenuBarLayout?
@@ -63,6 +70,9 @@ final class NativeMenuBarEngine {
     isLeftToRight: (() -> Bool)? = nil,
     isSupportedOperatingSystem: @escaping () -> Bool = {
       ProcessInfo.processInfo.operatingSystemVersion.majorVersion >= 27
+    },
+    isSupportedApplicationLocation: @escaping () -> Bool = {
+      ApplicationLocation.isSupported(Bundle.main.bundleURL)
     }
   ) {
     self.inventory = inventory
@@ -75,6 +85,7 @@ final class NativeMenuBarEngine {
         NSApplication.shared.userInterfaceLayoutDirection == .leftToRight
       }
     self.isSupportedOperatingSystem = isSupportedOperatingSystem
+    self.isSupportedApplicationLocation = isSupportedApplicationLocation
 
     captureActivity.onChange = { [weak self] isActive in
       Task { @MainActor in
@@ -243,6 +254,14 @@ final class NativeMenuBarEngine {
   }
 
   private func validateAvailabilityAndPermission() -> Bool {
+    guard isSupportedApplicationLocation() else {
+      releaseAssertion()
+      Self.logger.error("Refusing to hide: MenuBarFold is not running from /Applications")
+      let message = "Install MenuBarFold in /Applications before hiding menu bar icons."
+      publish(status: .unavailable(message), error: message)
+      return false
+    }
+
     guard isSupportedOperatingSystem() else {
       releaseAssertion()
       publish(

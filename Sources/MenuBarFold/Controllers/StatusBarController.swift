@@ -5,6 +5,17 @@ enum MenuBarControlAppearance {
   static func chevronSymbol(isExpanded: Bool) -> String {
     isExpanded ? "chevron.right" : "chevron.left"
   }
+
+  static func separatorImage() -> NSImage {
+    let image = NSImage(size: NSSize(width: 3, height: 16), flipped: false) { rect in
+      NSColor.black.setFill()
+      let line = NSRect(x: rect.midX - 0.5, y: 2, width: 1, height: rect.height - 4)
+      NSBezierPath(roundedRect: line, xRadius: 0.5, yRadius: 0.5).fill()
+      return true
+    }
+    image.isTemplate = true
+    return image
+  }
 }
 
 @MainActor
@@ -339,7 +350,7 @@ final class StatusBarController: NSObject, MenuBarBoundaryProviding {
     )
     button.image =
       areAlwaysHiddenControlsVisible
-      ? NSImage(systemSymbolName: "line.vertical", accessibilityDescription: description)
+      ? MenuBarControlAppearance.separatorImage()
       : nil
     button.image?.isTemplate = true
     button.toolTip = areAlwaysHiddenControlsVisible ? description : nil
