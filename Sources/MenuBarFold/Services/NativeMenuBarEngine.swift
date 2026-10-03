@@ -5,13 +5,15 @@ import Foundation
 protocol MenuBarBoundaryProviding: AnyObject {
   var toggleBoundaryFrame: CGRect? { get }
   var alwaysHiddenBoundaryFrame: CGRect? { get }
-  func setAlwaysHiddenBoundaryVisible(_ visible: Bool)
+  func setAlwaysHiddenControlsVisible(_ visible: Bool)
 }
 
 struct MenuBarEngineSnapshot: Equatable {
   let status: AppStatus
   let hiddenAppCount: Int
   let alwaysHiddenAppCount: Int
+  let isHiddenSectionExpanded: Bool
+  let isAlwaysHiddenSectionExpanded: Bool
   let error: String?
 }
 
@@ -20,6 +22,7 @@ final class NativeMenuBarEngine {
   private enum Presentation {
     case collapsed
     case expanded
+    case fullyExpanded
     case arranging
   }
 
@@ -46,6 +49,8 @@ final class NativeMenuBarEngine {
     status: .expanded,
     hiddenAppCount: 0,
     alwaysHiddenAppCount: 0,
+    isHiddenSectionExpanded: false,
+    isAlwaysHiddenSectionExpanded: false,
     error: nil
   )
 
@@ -79,8 +84,8 @@ final class NativeMenuBarEngine {
     captureActivity.start()
   }
 
-  var wantsCollapsedPresentation: Bool {
-    presentation == .collapsed
+  var requiresVisibilityAssertion: Bool {
+    presentation == .collapsed || (presentation == .expanded && alwaysHiddenEnabled)
   }
 
   var isNativeMechanismAvailable: Bool {
@@ -104,13 +109,13 @@ final class NativeMenuBarEngine {
 
   func collapse() {
     presentation = .collapsed
-    boundaryProvider?.setAlwaysHiddenBoundaryVisible(alwaysHiddenEnabled && assertion == nil)
+    updateAlwaysHiddenControlsVisibility()
 
     guard validateAvailabilityAndPermission() else { return }
 
     if protectCaptureIndicators, captureActivity.isActive {
       releaseAssertion()
-      boundaryProvider?.setAlwaysHiddenBoundaryVisible(false)
+      updateAlwaysHiddenControlsVisibility()
       publish(status: .pausedForCapture)
       return
     }
@@ -124,23 +129,23 @@ final class NativeMenuBarEngine {
 
   func expand() {
     presentation = .expanded
+    updateAlwaysHiddenControlsVisibility()
 
     guard alwaysHiddenEnabled else {
       releaseAssertion()
-      boundaryProvider?.setAlwaysHiddenBoundaryVisible(false)
       publish(status: .expanded, error: nil)
       return
     }
 
     guard validateAvailabilityAndPermission() else {
       releaseAssertion()
-      boundaryProvider?.setAlwaysHiddenBoundaryVisible(true)
+      updateAlwaysHiddenControlsVisibility()
       return
     }
 
     if protectCaptureIndicators, captureActivity.isActive {
       releaseAssertion()
-      boundaryProvider?.setAlwaysHiddenBoundaryVisible(false)
+      updateAlwaysHiddenControlsVisibility()
       publish(status: .pausedForCapture)
       return
     }
@@ -149,7 +154,59 @@ final class NativeMenuBarEngine {
       apply(cachedLayout, for: .expanded)
     } else {
       releaseAssertion()
-      boundaryProvider?.setAlwaysHiddenBoundaryVisible(true)
+      scanAndApply(.expanded)
+    }
+  }
+
+  func toggleAlwaysHiddenSection() {
+    guard alwaysHiddenEnabled, presentation != .collapsed else { return }
+
+    switch presentation {
+    case .expanded:
+      expandAlwaysHiddenSection()
+    case .fullyExpanded, .arranging:
+      collapseAlwaysHiddenSection()
+    case .collapsed:
+      break
+    }
+  }
+
+  private func expandAlwaysHiddenSection() {
+    presentation = .fullyExpanded
+    updateAlwaysHiddenControlsVisibility()
+
+    guard validateAvailabilityAndPermission() else { return }
+
+    if protectCaptureIndicators, captureActivity.isActive {
+      releaseAssertion()
+      updateAlwaysHiddenControlsVisibility()
+      publish(status: .pausedForCapture)
+      return
+    }
+
+    if let cachedLayout {
+      apply(cachedLayout, for: .fullyExpanded)
+    } else {
+      scanAndApply(.fullyExpanded)
+    }
+  }
+
+  private func collapseAlwaysHiddenSection() {
+    presentation = .expanded
+    updateAlwaysHiddenControlsVisibility()
+
+    guard validateAvailabilityAndPermission() else { return }
+
+    if protectCaptureIndicators, captureActivity.isActive {
+      releaseAssertion()
+      updateAlwaysHiddenControlsVisibility()
+      publish(status: .pausedForCapture)
+      return
+    }
+
+    if let cachedLayout {
+      apply(cachedLayout, for: .expanded)
+    } else {
       scanAndApply(.expanded)
     }
   }
@@ -158,22 +215,22 @@ final class NativeMenuBarEngine {
     presentation = .arranging
     cachedLayout = nil
     releaseAssertion()
-    boundaryProvider?.setAlwaysHiddenBoundaryVisible(alwaysHiddenEnabled)
+    updateAlwaysHiddenControlsVisibility()
     publish(status: .arranging, hiddenCount: 0, alwaysHiddenCount: 0, error: nil)
   }
 
   func invalidateLayout() {
-    let shouldCollapseAgain = presentation == .collapsed
     cachedLayout = nil
     releaseAssertion()
-    boundaryProvider?.setAlwaysHiddenBoundaryVisible(alwaysHiddenEnabled)
-    publish(status: shouldCollapseAgain ? .scanning : .expanded, error: nil)
+    updateAlwaysHiddenControlsVisibility()
+    publish(status: requiresVisibilityAssertion ? .scanning : .expanded, error: nil)
   }
 
   func reapplyCurrentPresentation() {
     switch presentation {
     case .collapsed: collapse()
     case .expanded: expand()
+    case .fullyExpanded: expandAlwaysHiddenSection()
     case .arranging: arrange()
     }
   }
@@ -182,7 +239,7 @@ final class NativeMenuBarEngine {
     captureActivity.stop()
     presentation = .expanded
     releaseAssertion()
-    boundaryProvider?.setAlwaysHiddenBoundaryVisible(alwaysHiddenEnabled)
+    updateAlwaysHiddenControlsVisibility()
   }
 
   private func validateAvailabilityAndPermission() -> Bool {
@@ -256,7 +313,7 @@ final class NativeMenuBarEngine {
         )
       else {
         self.releaseAssertion()
-        self.boundaryProvider?.setAlwaysHiddenBoundaryVisible(self.alwaysHiddenEnabled)
+        self.updateAlwaysHiddenControlsVisibility()
         self.publish(
           status: .unavailable("The complete menu bar layout could not be read safely."),
           error: "The complete menu bar layout could not be read safely."
@@ -275,7 +332,7 @@ final class NativeMenuBarEngine {
 
     if protectCaptureIndicators, captureActivity.isActive {
       releaseAssertion()
-      boundaryProvider?.setAlwaysHiddenBoundaryVisible(false)
+      updateAlwaysHiddenControlsVisibility()
       publish(
         status: .pausedForCapture,
         hiddenCount: hiddenCount,
@@ -295,7 +352,7 @@ final class NativeMenuBarEngine {
     case .expanded:
       if !alwaysHiddenEnabled || alwaysHiddenCount == 0 {
         releaseAssertion()
-        boundaryProvider?.setAlwaysHiddenBoundaryVisible(false)
+        updateAlwaysHiddenControlsVisibility()
         publish(
           status: .expanded,
           hiddenCount: hiddenCount,
@@ -306,9 +363,19 @@ final class NativeMenuBarEngine {
       }
       allowedSections = [.visible, .hidden]
       resultingStatus = .expanded
+    case .fullyExpanded:
+      releaseAssertion()
+      updateAlwaysHiddenControlsVisibility()
+      publish(
+        status: .expanded,
+        hiddenCount: hiddenCount,
+        alwaysHiddenCount: alwaysHiddenCount,
+        error: nil
+      )
+      return
     case .arranging:
       releaseAssertion()
-      boundaryProvider?.setAlwaysHiddenBoundaryVisible(alwaysHiddenEnabled)
+      updateAlwaysHiddenControlsVisibility()
       publish(
         status: .arranging,
         hiddenCount: hiddenCount,
@@ -359,7 +426,7 @@ final class NativeMenuBarEngine {
         let previousAssertion = self.assertion
         self.assertion = newAssertion
         previousAssertion?.invalidate()
-        self.boundaryProvider?.setAlwaysHiddenBoundaryVisible(false)
+        self.updateAlwaysHiddenControlsVisibility()
         self.publish(
           status: resultingStatus,
           hiddenCount: hiddenCount,
@@ -368,7 +435,7 @@ final class NativeMenuBarEngine {
         )
       case .failure(let error):
         self.releaseAssertion()
-        self.boundaryProvider?.setAlwaysHiddenBoundaryVisible(self.alwaysHiddenEnabled)
+        self.updateAlwaysHiddenControlsVisibility()
         self.publish(
           status: .unavailable(error.localizedDescription),
           hiddenCount: hiddenCount,
@@ -385,7 +452,7 @@ final class NativeMenuBarEngine {
     if isActive {
       guard presentation != .arranging else { return }
       releaseAssertion()
-      boundaryProvider?.setAlwaysHiddenBoundaryVisible(false)
+      updateAlwaysHiddenControlsVisibility()
       publish(status: .pausedForCapture, error: nil)
     } else if presentation != .arranging {
       cachedLayout = nil
@@ -399,6 +466,11 @@ final class NativeMenuBarEngine {
     assertion = nil
   }
 
+  private func updateAlwaysHiddenControlsVisibility() {
+    let shouldShow = alwaysHiddenEnabled && presentation != .collapsed
+    boundaryProvider?.setAlwaysHiddenControlsVisible(shouldShow)
+  }
+
   private func publish(
     status: AppStatus,
     hiddenCount: Int? = nil,
@@ -409,6 +481,8 @@ final class NativeMenuBarEngine {
       status: status,
       hiddenAppCount: hiddenCount ?? latestSnapshot.hiddenAppCount,
       alwaysHiddenAppCount: alwaysHiddenCount ?? latestSnapshot.alwaysHiddenAppCount,
+      isHiddenSectionExpanded: presentation != .collapsed,
+      isAlwaysHiddenSectionExpanded: presentation == .fullyExpanded || presentation == .arranging,
       error: error
     )
     onSnapshot?(latestSnapshot)

@@ -8,15 +8,6 @@ enum AppStatus: Equatable {
   case pausedForCapture
   case needsAccessibility
   case unavailable(String)
-
-  var isCollapsedIntent: Bool {
-    switch self {
-    case .collapsed, .pausedForCapture, .scanning:
-      return true
-    case .expanded, .arranging, .needsAccessibility, .unavailable:
-      return false
-    }
-  }
 }
 
 enum AppLanguage: String, CaseIterable, Identifiable {

@@ -31,14 +31,19 @@
 
 "action.expand" = "Rozwiń";
 "action.collapse" = "Zwiń";
+"control.hidden.expand" = "Pokaż zwykłe ukryte ikony paska menu";
+"control.hidden.collapse" = "Ukryj zwykłe ukryte ikony paska menu";
+"control.alwaysHidden.expand" = "Pokaż zawsze ukryte ikony paska menu";
+"control.alwaysHidden.collapse" = "Ukryj zawsze ukryte ikony paska menu";
+"control.alwaysHidden.separator" = "Separator sekcji zawsze ukrytej";
 
 "setup.title" = "Konfiguracja w trzech krokach";
 "setup.step1.title" = "Przyznaj dostęp Accessibility";
 "setup.step1.detail" = "Dzięki temu MenuBarFold rozpozna aplikację, do której należy każda ikona.";
 "setup.step2.title" = "Ułóż sekcje";
-"setup.step2.detail" = "Przytrzymaj Command i przeciągnij ikony w lewo od strzałki, aby je ukryć, albo w prawo, aby zostały widoczne.";
+"setup.step2.detail" = "Przytrzymaj Command i przeciągnij zwykłe ukryte ikony w lewo od głównej strzałki. Ikony na lewo od separatora | trafią do sekcji zawsze ukrytej.";
 "setup.step3.title" = "Kliknij strzałkę";
-"setup.step3.detail" = "Strzałka zwija i rozwija wybraną sekcję paska menu.";
+"setup.step3.detail" = "Główna strzałka steruje zwykłymi ukrytymi ikonami. Po ich rozwinięciu druga strzałka steruje ikonami zawsze ukrytymi.";
 "setup.arrange" = "Ułóż ikony";
 "setup.finish" = "Zakończ konfigurację";
 
@@ -54,7 +59,7 @@
 "behavior.hoverReveal" = "Rozwijaj po najechaniu na pasek menu";
 "behavior.sections" = "Sekcje";
 "behavior.alwaysHidden" = "Włącz sekcję zawsze ukrytą";
-"behavior.alwaysHidden.help" = "Drugi znacznik tworzy sekcję, która pozostaje ukryta także po rozwinięciu zwykłej sekcji. Ustaw ją przyciskiem Ułóż ikony.";
+"behavior.alwaysHidden.help" = "Separator | rozdziela obie ukryte sekcje. Ikony po jego lewej stronie są zawsze ukryte, a między nim i główną strzałką znajdują się zwykłe ukryte ikony. Druga strzałka pojawia się dopiero po rozwinięciu zwykłej sekcji.";
 "behavior.privacy" = "Wskaźniki prywatności";
 "behavior.captureProtection" = "Pokazuj cały pasek, gdy działa mikrofon lub kamera";
 "behavior.captureProtection.help" = "Zalecane. Tryb assessment w macOS 27 ukrywa szeroki wskaźnik użycia kamery i mikrofonu. MenuBarFold tymczasowo zwalnia ograniczenie, aby wskaźnik pozostał widoczny.";

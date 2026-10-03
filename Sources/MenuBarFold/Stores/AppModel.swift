@@ -43,6 +43,8 @@ final class AppModel {
   var isAccessibilityGranted: Bool
   var hiddenAppCount = 0
   var alwaysHiddenAppCount = 0
+  var isHiddenSectionExpanded = false
+  var isAlwaysHiddenSectionExpanded = false
   var lastError: String?
 
   var hasCompletedOnboarding: Bool {

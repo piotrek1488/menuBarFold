@@ -14,9 +14,9 @@ This is a direct-distribution app. The native visibility service is a private fr
 
 ## Features
 
-- One-click fold and expand from a small menu bar arrow.
-- Command-drag arrangement: items left of the arrow are hidden; items to the right stay visible.
-- Optional always-hidden section with a second boundary.
+- One-click fold and expand from a main menu bar arrow that always remains visible.
+- Command-drag arrangement: visible items sit right of the main arrow, regular hidden items sit between the arrow and the `|` separator, and always-hidden items sit left of `|`.
+- Optional always-hidden section with its own arrow, shown only after the regular hidden section is expanded.
 - Auto fold with configurable delay.
 - Optional reveal on menu bar hover.
 - Global shortcut presets.
@@ -46,7 +46,7 @@ cd MenuBarFold
 ./script/build_and_run.sh --verify
 ```
 
-The script builds a real app bundle at `dist/MenuBarFold.app`, copies localized resources, generates the app icon, applies an ad-hoc development signature, launches the app, and verifies its process.
+The script builds a real app bundle at `dist/MenuBarFold.app`, copies localized resources, generates the app icon, applies the first available persistent development signature (with a clearly marked ad-hoc fallback), launches the app, and verifies its process.
 
 Other useful commands:
 
@@ -56,7 +56,7 @@ Other useful commands:
 ./script/build_and_run.sh --logs
 ```
 
-The first launch opens setup. Grant Accessibility access, then hold Command and drag menu bar icons across the MenuBarFold arrow. Click **Finish Setup**, then click the arrow to fold the hidden section.
+The first launch opens setup. Grant Accessibility access, then hold Command and arrange icons in three zones: always hidden icons left of `|`, regular hidden icons between `|` and the main arrow, and visible icons to the right of the main arrow. Click **Finish Setup**. The main arrow controls the regular hidden section; its secondary arrow controls the always-hidden section.
 
 ## Important macOS 27 limitations
 

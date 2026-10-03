@@ -15,6 +15,8 @@ final class AppModelTests: XCTestCase {
     XCTAssertEqual(model.autoCollapseDelay, 10)
     XCTAssertTrue(model.protectCaptureIndicators)
     XCTAssertFalse(model.alwaysHiddenEnabled)
+    XCTAssertFalse(model.isHiddenSectionExpanded)
+    XCTAssertFalse(model.isAlwaysHiddenSectionExpanded)
     XCTAssertEqual(model.language, .english)
     XCTAssertEqual(model.shortcutPreset, .optionCommandH)
   }

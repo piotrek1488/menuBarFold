@@ -1,6 +1,12 @@
 import AppKit
 import Foundation
 
+enum MenuBarControlAppearance {
+  static func chevronSymbol(isExpanded: Bool) -> String {
+    isExpanded ? "chevron.right" : "chevron.left"
+  }
+}
+
 @MainActor
 final class StatusBarController: NSObject, MenuBarBoundaryProviding {
   private let model: AppModel
@@ -8,14 +14,18 @@ final class StatusBarController: NSObject, MenuBarBoundaryProviding {
   private let launchAtLoginService: LaunchAtLoginServicing
   private let hotKeyManager = GlobalHotKeyManager()
 
-  private let toggleItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-  private let alwaysHiddenItem = NSStatusBar.system.statusItem(withLength: 18)
+  private let primaryToggleItem = NSStatusBar.system.statusItem(
+    withLength: NSStatusItem.variableLength
+  )
+  private let alwaysHiddenToggleItem = NSStatusBar.system.statusItem(withLength: 18)
+  private let alwaysHiddenSeparatorItem = NSStatusBar.system.statusItem(withLength: 0)
 
   private var autoCollapseTimer: Timer?
   private var permissionTimer: Timer?
   private var hoverMonitor: Any?
   private var hoverDwellTimer: Timer?
   private var environmentReapplyWorkItem: DispatchWorkItem?
+  private var areAlwaysHiddenControlsVisible = false
 
   var isSettingsWindowVisible: (() -> Bool)?
 
@@ -74,50 +84,55 @@ final class StatusBarController: NSObject, MenuBarBoundaryProviding {
   }
 
   var toggleBoundaryFrame: CGRect? {
-    toggleItem.button?.window?.frame
+    primaryToggleItem.button?.window?.frame
   }
 
   var alwaysHiddenBoundaryFrame: CGRect? {
-    guard alwaysHiddenItem.isVisible else { return nil }
-    return alwaysHiddenItem.button?.window?.frame
+    alwaysHiddenSeparatorItem.button?.window?.frame
   }
 
-  func setAlwaysHiddenBoundaryVisible(_ visible: Bool) {
-    alwaysHiddenItem.length = visible ? 18 : 0
-    alwaysHiddenItem.isVisible = visible
+  func setAlwaysHiddenControlsVisible(_ visible: Bool) {
+    areAlwaysHiddenControlsVisible = visible
+    alwaysHiddenToggleItem.length = visible ? 18 : 0
+    alwaysHiddenToggleItem.isVisible = visible
+    alwaysHiddenSeparatorItem.length = 8
+    alwaysHiddenSeparatorItem.isVisible = true
+    updateAlwaysHiddenSeparatorAppearance()
   }
 
   func shutdown() {
     autoCollapseTimer?.invalidate()
     engine.shutdown()
-    setAlwaysHiddenBoundaryVisible(model.alwaysHiddenEnabled)
+    setAlwaysHiddenControlsVisible(false)
   }
 
   private func configureStatusItems() {
-    toggleItem.autosaveName = "MenuBarFold.ToggleBoundary"
-    toggleItem.isVisible = true
+    primaryToggleItem.autosaveName = "MenuBarFold.ToggleBoundary"
+    primaryToggleItem.isVisible = true
 
-    if let button = toggleItem.button {
+    if let button = primaryToggleItem.button {
       button.target = self
       button.action = #selector(toggleItemPressed(_:))
       button.sendAction(on: [.leftMouseUp, .rightMouseUp])
       button.imagePosition = .imageOnly
     }
 
-    alwaysHiddenItem.autosaveName = "MenuBarFold.AlwaysHiddenBoundary"
-    alwaysHiddenItem.isVisible = true
-    if let button = alwaysHiddenItem.button {
-      button.image = NSImage(
-        systemSymbolName: "line.vertical",
-        accessibilityDescription: "Always hidden boundary"
-      )
-      button.image?.isTemplate = true
+    alwaysHiddenToggleItem.autosaveName = "MenuBarFold.AlwaysHiddenToggle"
+    alwaysHiddenToggleItem.isVisible = true
+    if let button = alwaysHiddenToggleItem.button {
       button.target = self
       button.action = #selector(alwaysHiddenItemPressed(_:))
       button.sendAction(on: [.leftMouseUp, .rightMouseUp])
-      button.toolTip = "MenuBarFold"
+      button.imagePosition = .imageOnly
     }
-    setAlwaysHiddenBoundaryVisible(model.alwaysHiddenEnabled)
+
+    alwaysHiddenSeparatorItem.autosaveName = "MenuBarFold.AlwaysHiddenBoundary"
+    alwaysHiddenSeparatorItem.isVisible = true
+    if let button = alwaysHiddenSeparatorItem.button {
+      button.imagePosition = .imageOnly
+    }
+
+    setAlwaysHiddenControlsVisible(false)
     updateStatusItemAppearance()
   }
 
@@ -131,11 +146,10 @@ final class StatusBarController: NSObject, MenuBarBoundaryProviding {
   }
 
   private func toggle() {
-    switch model.status {
-    case .collapsed, .pausedForCapture, .scanning:
-      expand()
-    case .expanded, .arranging, .needsAccessibility, .unavailable:
+    if model.isHiddenSectionExpanded {
       collapse()
+    } else {
+      expand()
     }
   }
 
@@ -168,7 +182,15 @@ final class StatusBarController: NSObject, MenuBarBoundaryProviding {
 
   @objc
   private func alwaysHiddenItemPressed(_ sender: NSStatusBarButton) {
-    showContextMenu(from: sender)
+    let event = NSApp.currentEvent
+    if event?.type == .rightMouseUp {
+      showContextMenu(from: sender)
+    } else if event?.modifierFlags.contains(.option) == true {
+      beginArranging()
+    } else {
+      engine.toggleAlwaysHiddenSection()
+      scheduleAutoCollapseIfNeeded()
+    }
   }
 
   private func showContextMenu(from button: NSStatusBarButton) {
@@ -176,9 +198,9 @@ final class StatusBarController: NSObject, MenuBarBoundaryProviding {
     let menu = NSMenu()
 
     let toggleTitle =
-      model.status.isCollapsedIntent
-      ? L10n.string("menu.expand", language: language)
-      : L10n.string("menu.collapse", language: language)
+      model.isHiddenSectionExpanded
+      ? L10n.string("menu.collapse", language: language)
+      : L10n.string("menu.expand", language: language)
     menu.addItem(
       withTitle: toggleTitle,
       action: #selector(toggleFromMenu),
@@ -236,46 +258,93 @@ final class StatusBarController: NSObject, MenuBarBoundaryProviding {
     model.status = snapshot.status
     model.hiddenAppCount = snapshot.hiddenAppCount
     model.alwaysHiddenAppCount = snapshot.alwaysHiddenAppCount
+    model.isHiddenSectionExpanded = snapshot.isHiddenSectionExpanded
+    model.isAlwaysHiddenSectionExpanded = snapshot.isAlwaysHiddenSectionExpanded
     model.lastError = snapshot.error
     updateStatusItemAppearance()
 
-    if snapshot.status == .expanded, previousStatus != .expanded {
+    if snapshot.isHiddenSectionExpanded,
+      snapshot.status == .expanded,
+      previousStatus != .expanded
+    {
       scheduleAutoCollapseIfNeeded()
     }
   }
 
   private func updateStatusItemAppearance() {
     let language = model.language
-    let symbolName: String
     let descriptionKey: String
 
     switch model.status {
     case .collapsed:
-      symbolName = "chevron.right"
       descriptionKey = "status.collapsed"
     case .pausedForCapture:
-      symbolName = "shield.lefthalf.filled"
       descriptionKey = "status.pausedForCapture"
     case .scanning:
-      symbolName = "ellipsis"
       descriptionKey = "status.scanning"
     case .needsAccessibility:
-      symbolName = "exclamationmark.triangle"
       descriptionKey = "status.needsAccessibility"
     case .unavailable:
-      symbolName = "exclamationmark.circle"
       descriptionKey = "status.unavailable"
     case .expanded, .arranging:
-      symbolName = "chevron.left"
       descriptionKey = model.status == .arranging ? "status.arranging" : "status.expanded"
     }
 
     let description = L10n.string(descriptionKey, language: language)
+    let primaryActionKey =
+      model.isHiddenSectionExpanded ? "control.hidden.collapse" : "control.hidden.expand"
+    updateChevron(
+      for: primaryToggleItem,
+      pointsRight: model.isHiddenSectionExpanded,
+      accessibilityKey: primaryActionKey,
+      language: language
+    )
+    primaryToggleItem.button?.toolTip = "MenuBarFold — \(description)"
+
+    let alwaysHiddenActionKey =
+      model.isAlwaysHiddenSectionExpanded
+      ? "control.alwaysHidden.collapse"
+      : "control.alwaysHidden.expand"
+    updateChevron(
+      for: alwaysHiddenToggleItem,
+      pointsRight: model.isAlwaysHiddenSectionExpanded,
+      accessibilityKey: alwaysHiddenActionKey,
+      language: language
+    )
+
+    updateAlwaysHiddenSeparatorAppearance()
+  }
+
+  private func updateChevron(
+    for item: NSStatusItem,
+    pointsRight: Bool,
+    accessibilityKey: String,
+    language: AppLanguage
+  ) {
+    let description = L10n.string(accessibilityKey, language: language)
+    let symbolName = MenuBarControlAppearance.chevronSymbol(isExpanded: pointsRight)
     let image = NSImage(systemSymbolName: symbolName, accessibilityDescription: description)
     image?.isTemplate = true
-    toggleItem.button?.image = image
-    toggleItem.button?.toolTip = "MenuBarFold — \(description)"
-    toggleItem.button?.setAccessibilityLabel(description)
+    item.button?.image = image
+    item.button?.toolTip = description
+    item.button?.setAccessibilityLabel(description)
+  }
+
+  private func updateAlwaysHiddenSeparatorAppearance() {
+    guard let button = alwaysHiddenSeparatorItem.button else { return }
+
+    let description = L10n.string(
+      "control.alwaysHidden.separator",
+      language: model.language
+    )
+    button.image =
+      areAlwaysHiddenControlsVisible
+      ? NSImage(systemSymbolName: "line.vertical", accessibilityDescription: description)
+      : nil
+    button.image?.isTemplate = true
+    button.toolTip = areAlwaysHiddenControlsVisible ? description : nil
+    button.setAccessibilityElement(areAlwaysHiddenControlsVisible)
+    button.setAccessibilityLabel(description)
   }
 
   private func preferenceChanged(_ change: PreferenceChange) {
@@ -325,7 +394,8 @@ final class StatusBarController: NSObject, MenuBarBoundaryProviding {
   private func scheduleAutoCollapseIfNeeded() {
     autoCollapseTimer?.invalidate()
     guard model.autoCollapseEnabled,
-      model.status == .expanded,
+      model.isHiddenSectionExpanded,
+      model.status != .arranging,
       model.autoCollapseDelay > 0
     else {
       return
@@ -373,7 +443,7 @@ final class StatusBarController: NSObject, MenuBarBoundaryProviding {
   }
 
   private func mouseMovedForHoverReveal() {
-    guard model.status.isCollapsedIntent, isMouseInMenuBar else {
+    guard !model.isHiddenSectionExpanded, isMouseInMenuBar else {
       hoverDwellTimer?.invalidate()
       hoverDwellTimer = nil
       return
@@ -385,7 +455,7 @@ final class StatusBarController: NSObject, MenuBarBoundaryProviding {
       Task { @MainActor in
         guard let self else { return }
         self.hoverDwellTimer = nil
-        if self.model.status.isCollapsedIntent, self.isMouseInMenuBar {
+        if !self.model.isHiddenSectionExpanded, self.isMouseInMenuBar {
           self.expand()
         }
       }
@@ -436,13 +506,13 @@ final class StatusBarController: NSObject, MenuBarBoundaryProviding {
 
   @objc
   private func environmentChanged() {
-    let shouldReapplyCollapse = engine.wantsCollapsedPresentation
+    let shouldReapplyRestriction = engine.requiresVisibilityAssertion
     environmentReapplyWorkItem?.cancel()
     engine.invalidateLayout()
 
-    guard shouldReapplyCollapse else { return }
+    guard shouldReapplyRestriction else { return }
     let workItem = DispatchWorkItem { [weak self] in
-      self?.collapse()
+      self?.engine.reapplyCurrentPresentation()
     }
     environmentReapplyWorkItem = workItem
     DispatchQueue.main.asyncAfter(deadline: .now() + 1.2, execute: workItem)

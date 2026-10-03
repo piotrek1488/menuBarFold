@@ -31,14 +31,19 @@
 
 "action.expand" = "Expand";
 "action.collapse" = "Fold";
+"control.hidden.expand" = "Show hidden menu bar icons";
+"control.hidden.collapse" = "Hide regular hidden menu bar icons";
+"control.alwaysHidden.expand" = "Show always-hidden menu bar icons";
+"control.alwaysHidden.collapse" = "Hide always-hidden menu bar icons";
+"control.alwaysHidden.separator" = "Always-hidden section separator";
 
 "setup.title" = "Set up in three steps";
 "setup.step1.title" = "Grant Accessibility access";
 "setup.step1.detail" = "This lets MenuBarFold identify which app owns each menu bar item.";
 "setup.step2.title" = "Arrange your sections";
-"setup.step2.detail" = "Hold Command and drag icons left of the arrow to hide them, or right to keep them visible.";
+"setup.step2.detail" = "Hold Command and drag regular hidden icons left of the main arrow. Icons left of the | separator belong to the always-hidden section.";
 "setup.step3.title" = "Click the arrow";
-"setup.step3.detail" = "The arrow folds and unfolds your chosen menu bar section.";
+"setup.step3.detail" = "The main arrow controls regular hidden icons. After they open, a second arrow controls the always-hidden icons.";
 "setup.arrange" = "Arrange Icons";
 "setup.finish" = "Finish Setup";
 
@@ -54,7 +59,7 @@
 "behavior.hoverReveal" = "Expand after hovering over the menu bar";
 "behavior.sections" = "Sections";
 "behavior.alwaysHidden" = "Enable an always-hidden section";
-"behavior.alwaysHidden.help" = "A second marker creates a section that stays hidden even while the regular hidden section is expanded. Use Arrange Icons to place it.";
+"behavior.alwaysHidden.help" = "The | separator divides both hidden sections. Icons to its left are always hidden; icons between it and the main arrow are regular hidden icons. A second arrow appears only after the regular section is expanded.";
 "behavior.privacy" = "Privacy indicators";
 "behavior.captureProtection" = "Show the full menu bar while a microphone or camera is active";
 "behavior.captureProtection.help" = "Recommended. macOS 27 assessment mode hides the wide camera and microphone activity capsule. MenuBarFold temporarily releases its restriction so that indicator remains visible.";

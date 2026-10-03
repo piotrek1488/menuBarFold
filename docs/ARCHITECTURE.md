@@ -8,8 +8,9 @@ MenuBarFold is a single-process menu bar app. It has no helper, daemon, network 
 AppDelegate
   ├─ AppModel (observable state and UserDefaults)
   ├─ StatusBarController
-  │    ├─ NSStatusItem toggle boundary
-  │    ├─ optional always-hidden boundary
+  │    ├─ persistent primary NSStatusItem toggle boundary
+  │    ├─ conditional always-hidden toggle
+  │    ├─ `|` boundary between regular and always-hidden sections
   │    ├─ timers, hover monitor and global shortcut
   │    └─ NativeMenuBarEngine
   │         ├─ AccessibilityMenuBarInventory
@@ -22,12 +23,12 @@ AppDelegate
 
 ## macOS 27 hiding flow
 
-1. The user Command-drags third-party items around the MenuBarFold arrow.
+1. The user Command-drags third-party items into three zones: always hidden left of `|`, regular hidden between `|` and the main arrow, and visible right of the main arrow.
 2. On collapse, `AccessibilityMenuBarInventory` asks each running app for `AXExtrasMenuBar` children and their frames.
 3. `MenuBarLayoutResolver` classifies the owning bundle as visible, hidden, or always hidden relative to MenuBarFold's status item boundaries.
 4. For apps with several items, the most visible section wins. This prevents one hidden sibling icon from hiding an icon the user placed on the visible side.
 5. `NativeVisibilityClient` dynamically loads `MenuBarClientCore` and creates an assessment-mode assertion with an allow-list of visible app bundle identifiers and protected system item identifiers.
-6. Expanding replaces or invalidates the assertion. Process exit also releases it automatically.
+6. The main toggle switches between visible-only and regular-expanded allow-lists. The secondary toggle releases or reapplies the regular-expanded assertion to reveal or hide the always-hidden section. Process exit also releases it automatically.
 
 The Objective-C bridge uses runtime class and selector lookup. There is no link-time dependency on a private framework, so a changed or missing framework becomes a normal unavailable state instead of a launch crash.
 

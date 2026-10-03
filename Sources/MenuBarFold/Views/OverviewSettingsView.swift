@@ -221,9 +221,9 @@ struct OverviewSettingsView: View {
   }
 
   private var primaryButtonTitle: String {
-    model.status.isCollapsedIntent
-      ? L10n.string("action.expand", language: model.language)
-      : L10n.string("action.collapse", language: model.language)
+    model.isHiddenSectionExpanded
+      ? L10n.string("action.collapse", language: model.language)
+      : L10n.string("action.expand", language: model.language)
   }
 }
 
