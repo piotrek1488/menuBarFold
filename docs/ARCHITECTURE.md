@@ -9,8 +9,8 @@ AppDelegate
   ├─ AppModel (observable state and UserDefaults)
   ├─ StatusBarController
   │    ├─ persistent primary NSStatusItem toggle boundary
-  │    ├─ conditional always-hidden toggle
-  │    ├─ `|` boundary between regular and always-hidden sections
+  │    ├─ native-overflow boundary and bounded spacer items
+  │    ├─ `|` arrangement boundary between regular and always-hidden sections
   │    ├─ timers, hover monitor and global shortcut
   │    └─ NativeMenuBarEngine
   │         ├─ AccessibilityMenuBarInventory
@@ -28,7 +28,8 @@ AppDelegate
 3. `MenuBarLayoutResolver` classifies the owning bundle as visible, hidden, or always hidden relative to MenuBarFold's status item boundaries.
 4. For apps with several items, the most visible section wins. This prevents one hidden sibling icon from hiding an icon the user placed on the visible side.
 5. `NativeVisibilityClient` dynamically loads `MenuBarClientCore` and creates an assessment-mode assertion with an allow-list of visible app bundle identifiers and protected system item identifiers.
-6. The main toggle switches between visible-only and regular-expanded allow-lists. The secondary toggle releases or reapplies the regular-expanded assertion to reveal or hide the always-hidden section. Process exit also releases it automatically.
+6. On collapse, the allow-list keeps visible and always-hidden bundles but removes regular hidden bundles. Bounded spacer items move the always-hidden icons left of `|` into macOS 27's native `«` overflow menu.
+7. On expansion, MenuBarFold releases the assertion so regular hidden icons return, while the bounded spacers keep always-hidden icons in the system overflow. Process exit releases the assertion and removes the overflow geometry.
 
 The Objective-C bridge uses runtime class and selector lookup. There is no link-time dependency on a private framework, so a changed or missing framework becomes a normal unavailable state instead of a launch crash.
 
@@ -39,6 +40,7 @@ The Objective-C bridge uses runtime class and selector lookup. There is no link-
 - **Generation tokens:** stale Accessibility scans and late private-framework callbacks cannot overwrite a newer user action.
 - **No uncertain geometry:** an item outside known display coordinates invalidates the whole snapshot.
 - **Per-display projection:** boundary positions are projected by their distance from each display's visible menu bar edge.
+- **Bounded native overflow:** no spacer reaches macOS 27's per-display status-item discard threshold; several bounded items provide the required width across notched and external displays.
 - **Environment refresh:** display, wake, app launch, and app termination changes release stale state before a fresh scan.
 - **Capture protection:** a microphone or camera in use releases the assertion so macOS's wide privacy capsule remains available.
 - **System controls:** MenuBarAgent and Control Center are excluded from third-party section classification and their known system identifiers are allow-listed.

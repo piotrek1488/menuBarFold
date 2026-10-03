@@ -4,9 +4,9 @@ MenuBarFold to natywna aplikacja dla macOS 27, która porządkuje ikony na górn
 
 ## Co potrafi
 
-- Zwijanie i rozwijanie zwykłych ukrytych ikon główną strzałką, która zawsze pozostaje widoczna.
+- Zwijanie i rozwijanie zwykłych ukrytych ikon strzałką MenuBarFold, która zawsze pozostaje widoczna.
 - Układanie ikon przez `Command + przeciągnięcie`.
-- Opcjonalna sekcja zawsze ukryta z separatorem `|` i własną strzałką, widoczną dopiero po rozwinięciu głównej sekcji.
+- Sekcja zawsze ukryta dostępna pod natywnym przyciskiem `«` macOS 27; jej ikony pozostają klikalne w systemowym menu.
 - Automatyczne zwijanie po wybranym czasie.
 - Rozwijanie po najechaniu kursorem.
 - Globalny skrót klawiszowy.
@@ -22,7 +22,7 @@ MenuBarFold to natywna aplikacja dla macOS 27, która porządkuje ikony na górn
 2. Przyznaj jej dostęp w `Ustawienia systemowe → Prywatność i bezpieczeństwo → Dostępność`.
 3. Przytrzymaj `Command` i ustaw ikony zawsze ukryte po lewej stronie separatora `|`.
 4. Zwykłe ukryte ikony ustaw między separatorem `|` i główną strzałką, a widoczne ikony po prawej stronie głównej strzałki.
-5. Główna strzałka `<` rozwija zwykłe ukryte ikony. Po rozwinięciu zmienia się w `>` i pojawia się druga strzałka sterująca sekcją zawsze ukrytą.
+5. Strzałka MenuBarFold `<` rozwija zwykłe ukryte ikony i zmienia się w `>`. Systemowy przycisk `«` otwiera ikony zawsze ukryte.
 6. Kliknij strzałkę prawym przyciskiem, aby otworzyć szybkie menu. `Option + klik` włącza tryb układania.
 
 ## Budowanie

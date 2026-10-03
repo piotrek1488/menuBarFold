@@ -28,15 +28,15 @@ final class StatusBarController: NSObject, MenuBarBoundaryProviding {
   private let primaryToggleItem = NSStatusBar.system.statusItem(
     withLength: NSStatusItem.variableLength
   )
-  private let alwaysHiddenToggleItem = NSStatusBar.system.statusItem(withLength: 18)
-  private let alwaysHiddenSeparatorItem = NSStatusBar.system.statusItem(withLength: 0)
+  private let nativeOverflowSpacerItems: [NSStatusItem]
+  private let alwaysHiddenSeparatorItem: NSStatusItem
 
   private var autoCollapseTimer: Timer?
   private var permissionTimer: Timer?
   private var hoverMonitor: Any?
   private var hoverDwellTimer: Timer?
   private var environmentReapplyWorkItem: DispatchWorkItem?
-  private var areAlwaysHiddenControlsVisible = false
+  private var alwaysHiddenBoundaryMode = AlwaysHiddenBoundaryMode.disabled
 
   var isSettingsWindowVisible: (() -> Bool)?
 
@@ -48,6 +48,14 @@ final class StatusBarController: NSObject, MenuBarBoundaryProviding {
     self.model = model
     self.engine = engine ?? NativeMenuBarEngine()
     self.launchAtLoginService = launchAtLoginService
+    self.nativeOverflowSpacerItems = (0..<NativeOverflowGeometry.spacerCount).map { index in
+      let item = NSStatusBar.system.statusItem(withLength: 0)
+      item.autosaveName = "MenuBarFold.NativeOverflowSpacer.\(index).v1"
+      item.isVisible = false
+      item.button?.setAccessibilityElement(false)
+      return item
+    }
+    self.alwaysHiddenSeparatorItem = NSStatusBar.system.statusItem(withLength: 0)
     super.init()
 
     configureStatusItems()
@@ -102,19 +110,20 @@ final class StatusBarController: NSObject, MenuBarBoundaryProviding {
     alwaysHiddenSeparatorItem.button?.window?.frame
   }
 
-  func setAlwaysHiddenControlsVisible(_ visible: Bool) {
-    areAlwaysHiddenControlsVisible = visible
-    alwaysHiddenToggleItem.length = visible ? 18 : 0
-    alwaysHiddenToggleItem.isVisible = visible
-    alwaysHiddenSeparatorItem.length = 8
-    alwaysHiddenSeparatorItem.isVisible = true
-    updateAlwaysHiddenSeparatorAppearance()
+  func setAlwaysHiddenBoundaryMode(_ mode: AlwaysHiddenBoundaryMode) {
+    alwaysHiddenBoundaryMode = mode
+    applyAlwaysHiddenBoundaryMode()
+  }
+
+  func afterMenuBarLayoutSettles(_ action: @escaping @MainActor () -> Void) {
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+      action()
+    }
   }
 
   func shutdown() {
     autoCollapseTimer?.invalidate()
     engine.shutdown()
-    setAlwaysHiddenControlsVisible(false)
   }
 
   private func configureStatusItems() {
@@ -128,22 +137,13 @@ final class StatusBarController: NSObject, MenuBarBoundaryProviding {
       button.imagePosition = .imageOnly
     }
 
-    alwaysHiddenToggleItem.autosaveName = "MenuBarFold.AlwaysHiddenToggle"
-    alwaysHiddenToggleItem.isVisible = true
-    if let button = alwaysHiddenToggleItem.button {
-      button.target = self
-      button.action = #selector(alwaysHiddenItemPressed(_:))
-      button.sendAction(on: [.leftMouseUp, .rightMouseUp])
-      button.imagePosition = .imageOnly
-    }
-
-    alwaysHiddenSeparatorItem.autosaveName = "MenuBarFold.AlwaysHiddenBoundary"
+    alwaysHiddenSeparatorItem.autosaveName = "MenuBarFold.NativeOverflowBoundary.v1"
     alwaysHiddenSeparatorItem.isVisible = true
     if let button = alwaysHiddenSeparatorItem.button {
       button.imagePosition = .imageOnly
     }
 
-    setAlwaysHiddenControlsVisible(false)
+    setAlwaysHiddenBoundaryMode(.disabled)
     updateStatusItemAppearance()
   }
 
@@ -188,19 +188,6 @@ final class StatusBarController: NSObject, MenuBarBoundaryProviding {
       beginArranging()
     } else {
       toggle()
-    }
-  }
-
-  @objc
-  private func alwaysHiddenItemPressed(_ sender: NSStatusBarButton) {
-    let event = NSApp.currentEvent
-    if event?.type == .rightMouseUp {
-      showContextMenu(from: sender)
-    } else if event?.modifierFlags.contains(.option) == true {
-      beginArranging()
-    } else {
-      engine.toggleAlwaysHiddenSection()
-      scheduleAutoCollapseIfNeeded()
     }
   }
 
@@ -270,7 +257,6 @@ final class StatusBarController: NSObject, MenuBarBoundaryProviding {
     model.hiddenAppCount = snapshot.hiddenAppCount
     model.alwaysHiddenAppCount = snapshot.alwaysHiddenAppCount
     model.isHiddenSectionExpanded = snapshot.isHiddenSectionExpanded
-    model.isAlwaysHiddenSectionExpanded = snapshot.isAlwaysHiddenSectionExpanded
     model.lastError = snapshot.error
     updateStatusItemAppearance()
 
@@ -312,18 +298,9 @@ final class StatusBarController: NSObject, MenuBarBoundaryProviding {
     )
     primaryToggleItem.button?.toolTip = "MenuBarFold — \(description)"
 
-    let alwaysHiddenActionKey =
-      model.isAlwaysHiddenSectionExpanded
-      ? "control.alwaysHidden.collapse"
-      : "control.alwaysHidden.expand"
-    updateChevron(
-      for: alwaysHiddenToggleItem,
-      pointsRight: model.isAlwaysHiddenSectionExpanded,
-      accessibilityKey: alwaysHiddenActionKey,
-      language: language
-    )
-
-    updateAlwaysHiddenSeparatorAppearance()
+    if alwaysHiddenBoundaryMode == .boundary {
+      updateAlwaysHiddenSeparatorAppearance()
+    }
   }
 
   private func updateChevron(
@@ -341,21 +318,68 @@ final class StatusBarController: NSObject, MenuBarBoundaryProviding {
     item.button?.setAccessibilityLabel(description)
   }
 
-  private func updateAlwaysHiddenSeparatorAppearance() {
+  private func applyAlwaysHiddenBoundaryMode() {
+    for item in nativeOverflowSpacerItems {
+      item.length = 0
+      item.isVisible = false
+    }
+
     guard let button = alwaysHiddenSeparatorItem.button else { return }
 
+    switch alwaysHiddenBoundaryMode {
+    case .disabled:
+      alwaysHiddenSeparatorItem.length = 0
+      alwaysHiddenSeparatorItem.isVisible = true
+      button.image = nil
+      button.toolTip = nil
+      button.setAccessibilityElement(false)
+    case .boundary:
+      alwaysHiddenSeparatorItem.length = 8
+      alwaysHiddenSeparatorItem.isVisible = true
+      updateAlwaysHiddenSeparatorAppearance()
+    case .nativeOverflow:
+      let displays = Self.nativeOverflowDisplays()
+      let unitLength = NativeOverflowGeometry.unitLength(displays: displays)
+      let activeSpacerCount = NativeOverflowGeometry.activeSpacerCount(
+        unitLength: unitLength,
+        displays: displays
+      )
+
+      button.image = nil
+      button.toolTip = nil
+      button.setAccessibilityElement(false)
+      alwaysHiddenSeparatorItem.isVisible = true
+      alwaysHiddenSeparatorItem.length = unitLength
+
+      for (index, item) in nativeOverflowSpacerItems.enumerated() {
+        let isActive = index < activeSpacerCount
+        item.length = isActive ? unitLength : 0
+        item.isVisible = isActive
+      }
+    }
+  }
+
+  private func updateAlwaysHiddenSeparatorAppearance() {
+    guard let button = alwaysHiddenSeparatorItem.button else { return }
     let description = L10n.string(
       "control.alwaysHidden.separator",
       language: model.language
     )
-    button.image =
-      areAlwaysHiddenControlsVisible
-      ? MenuBarControlAppearance.separatorImage()
-      : nil
+    button.image = MenuBarControlAppearance.separatorImage()
     button.image?.isTemplate = true
-    button.toolTip = areAlwaysHiddenControlsVisible ? description : nil
-    button.setAccessibilityElement(areAlwaysHiddenControlsVisible)
+    button.toolTip = description
+    button.setAccessibilityElement(true)
     button.setAccessibilityLabel(description)
+  }
+
+  private static func nativeOverflowDisplays() -> [NativeOverflowGeometry.Display] {
+    NSScreen.screens.map { screen in
+      let statusAreaWidth = screen.auxiliaryTopRightArea?.width
+      return NativeOverflowGeometry.Display(
+        width: screen.frame.width,
+        statusAreaWidth: statusAreaWidth
+      )
+    }
   }
 
   private func preferenceChanged(_ change: PreferenceChange) {

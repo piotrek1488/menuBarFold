@@ -24,7 +24,7 @@ final class NativeMenuBarEngineTests: XCTestCase {
     XCTAssertTrue(inventory.didRequestAuthorization)
     XCTAssertTrue(visibility.activations.isEmpty)
     XCTAssertEqual(latest?.status, .needsAccessibility)
-    XCTAssertFalse(boundary.areAlwaysHiddenControlsVisible)
+    XCTAssertEqual(boundary.mode, .disabled)
   }
 
   func testOutsideApplicationsFailsOpenWithoutHidingOwnControls() {
@@ -45,7 +45,7 @@ final class NativeMenuBarEngineTests: XCTestCase {
     engine.collapse()
 
     XCTAssertTrue(visibility.activations.isEmpty)
-    XCTAssertFalse(boundary.areAlwaysHiddenControlsVisible)
+    XCTAssertEqual(boundary.mode, .disabled)
     guard let latest, case .unavailable(let message) = latest.status else {
       return XCTFail("Expected an unavailable state outside /Applications")
     }
@@ -88,7 +88,7 @@ final class NativeMenuBarEngineTests: XCTestCase {
     XCTAssertEqual(visibility.activations[0].systemItems, Array(0..<64))
     XCTAssertEqual(latest?.status, .collapsed)
     XCTAssertEqual(latest?.hiddenAppCount, 1)
-    XCTAssertFalse(boundary.areAlwaysHiddenControlsVisible)
+    XCTAssertEqual(boundary.mode, .disabled)
   }
 
   func testCaptureProtectionDoesNotActivateRestriction() {
@@ -109,7 +109,7 @@ final class NativeMenuBarEngineTests: XCTestCase {
 
     XCTAssertTrue(visibility.activations.isEmpty)
     XCTAssertEqual(latest?.status, .pausedForCapture)
-    XCTAssertFalse(boundary.areAlwaysHiddenControlsVisible)
+    XCTAssertEqual(boundary.mode, .disabled)
   }
 
   func testExpandingInvalidatesActiveRestriction() throws {
@@ -141,7 +141,7 @@ final class NativeMenuBarEngineTests: XCTestCase {
     XCTAssertTrue(assertion.didInvalidate)
   }
 
-  func testPrimaryAndAlwaysHiddenControlsExposeSectionsIndependently() throws {
+  func testPrimaryControlAndSystemOverflowExposeSectionsIndependently() throws {
     let inventory = InventoryMock(
       isAuthorized: true,
       items: [
@@ -174,47 +174,27 @@ final class NativeMenuBarEngineTests: XCTestCase {
 
     engine.collapse()
 
-    XCTAssertEqual(visibility.activations.last?.bundles, ["own.app", "visible.app"])
+    XCTAssertEqual(
+      visibility.activations.last?.bundles,
+      ["always.app", "own.app", "visible.app"]
+    )
     XCTAssertEqual(latest?.status, .collapsed)
     XCTAssertEqual(latest?.isHiddenSectionExpanded, false)
-    XCTAssertEqual(latest?.isAlwaysHiddenSectionExpanded, false)
-    XCTAssertFalse(boundary.areAlwaysHiddenControlsVisible)
+    XCTAssertEqual(boundary.mode, .nativeOverflow)
 
+    let collapsedAssertion = try XCTUnwrap(visibility.lastAssertion)
     engine.expand()
 
-    XCTAssertEqual(
-      visibility.activations.last?.bundles,
-      ["hidden.app", "own.app", "visible.app"]
-    )
+    XCTAssertTrue(collapsedAssertion.didInvalidate)
     XCTAssertEqual(latest?.status, .expanded)
     XCTAssertEqual(latest?.isHiddenSectionExpanded, true)
-    XCTAssertEqual(latest?.isAlwaysHiddenSectionExpanded, false)
-    XCTAssertTrue(boundary.areAlwaysHiddenControlsVisible)
+    XCTAssertEqual(boundary.mode, .nativeOverflow)
 
-    let regularHiddenAssertion = try XCTUnwrap(visibility.lastAssertion)
-    engine.toggleAlwaysHiddenSection()
+    engine.arrange()
 
-    XCTAssertTrue(regularHiddenAssertion.didInvalidate)
-    XCTAssertEqual(latest?.status, .expanded)
+    XCTAssertEqual(latest?.status, .arranging)
     XCTAssertEqual(latest?.isHiddenSectionExpanded, true)
-    XCTAssertEqual(latest?.isAlwaysHiddenSectionExpanded, true)
-    XCTAssertTrue(boundary.areAlwaysHiddenControlsVisible)
-
-    engine.toggleAlwaysHiddenSection()
-
-    XCTAssertEqual(
-      visibility.activations.last?.bundles,
-      ["hidden.app", "own.app", "visible.app"]
-    )
-    XCTAssertEqual(latest?.isAlwaysHiddenSectionExpanded, false)
-    XCTAssertTrue(boundary.areAlwaysHiddenControlsVisible)
-
-    engine.collapse()
-
-    XCTAssertEqual(visibility.activations.last?.bundles, ["own.app", "visible.app"])
-    XCTAssertEqual(latest?.isHiddenSectionExpanded, false)
-    XCTAssertEqual(latest?.isAlwaysHiddenSectionExpanded, false)
-    XCTAssertFalse(boundary.areAlwaysHiddenControlsVisible)
+    XCTAssertEqual(boundary.mode, .boundary)
   }
 
   func testCollapsedAndExpandedControlsUseRequestedChevronDirections() {
@@ -328,9 +308,13 @@ private final class CaptureMock: CaptureActivityMonitoring {
 private final class BoundaryMock: MenuBarBoundaryProviding {
   var toggleBoundaryFrame: CGRect? = CGRect(x: 790, y: 0, width: 20, height: 24)
   var alwaysHiddenBoundaryFrame: CGRect? = CGRect(x: 490, y: 0, width: 20, height: 24)
-  private(set) var areAlwaysHiddenControlsVisible = true
+  private(set) var mode = AlwaysHiddenBoundaryMode.disabled
 
-  func setAlwaysHiddenControlsVisible(_ visible: Bool) {
-    areAlwaysHiddenControlsVisible = visible
+  func setAlwaysHiddenBoundaryMode(_ mode: AlwaysHiddenBoundaryMode) {
+    self.mode = mode
+  }
+
+  func afterMenuBarLayoutSettles(_ action: @escaping @MainActor () -> Void) {
+    action()
   }
 }

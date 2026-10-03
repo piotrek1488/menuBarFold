@@ -22,13 +22,13 @@
 "installation.error.detail" = "%@\n\nYou can also drag MenuBarFold.app into the system Applications folder.";
 
 "status.expanded" = "Menu bar expanded";
-"status.expanded.detail" = "Your regular hidden section is visible.";
+"status.expanded.detail" = "Regular hidden icons are visible. The macOS « button opens always-hidden icons.";
 "status.arranging" = "Arrangement mode";
-"status.arranging.detail" = "Hold Command and drag icons across the MenuBarFold arrow.";
+"status.arranging.detail" = "Hold Command: place always-hidden icons left of |, regular hidden icons between | and the MenuBarFold arrow, and visible icons to the right.";
 "status.scanning" = "Reading menu bar layout";
 "status.scanning.detail" = "MenuBarFold is checking which apps belong in each section.";
 "status.collapsed" = "Menu bar folded";
-"status.collapsed.detail" = "Apps placed to the left of the arrow are hidden.";
+"status.collapsed.detail" = "The MenuBarFold arrow hides regular icons. The macOS « button still opens always-hidden icons.";
 "status.pausedForCapture" = "Temporarily expanded for privacy";
 "status.pausedForCapture.detail" = "A microphone or camera is active, so MenuBarFold is preserving macOS privacy indicators.";
 "status.needsAccessibility" = "Waiting for permission";
@@ -40,17 +40,15 @@
 "action.collapse" = "Fold";
 "control.hidden.expand" = "Show hidden menu bar icons";
 "control.hidden.collapse" = "Hide regular hidden menu bar icons";
-"control.alwaysHidden.expand" = "Show always-hidden menu bar icons";
-"control.alwaysHidden.collapse" = "Hide always-hidden menu bar icons";
-"control.alwaysHidden.separator" = "Always-hidden section separator";
+"control.alwaysHidden.separator" = "Boundary for icons kept in the macOS overflow menu";
 
 "setup.title" = "Set up in three steps";
 "setup.step1.title" = "Grant Accessibility access";
 "setup.step1.detail" = "This lets MenuBarFold identify which app owns each menu bar item.";
 "setup.step2.title" = "Arrange your sections";
 "setup.step2.detail" = "Hold Command and drag regular hidden icons left of the main arrow. Icons left of the | separator belong to the always-hidden section.";
-"setup.step3.title" = "Click the arrow";
-"setup.step3.detail" = "The main arrow controls regular hidden icons. After they open, a second arrow controls the always-hidden icons.";
+"setup.step3.title" = "Use both controls";
+"setup.step3.detail" = "The MenuBarFold arrow controls regular hidden icons. The system « button opens the always-hidden icons in the native macOS overflow menu.";
 "setup.arrange" = "Arrange Icons";
 "setup.finish" = "Finish Setup";
 
@@ -65,8 +63,8 @@
 "behavior.seconds" = "%d seconds";
 "behavior.hoverReveal" = "Expand after hovering over the menu bar";
 "behavior.sections" = "Sections";
-"behavior.alwaysHidden" = "Enable an always-hidden section";
-"behavior.alwaysHidden.help" = "The | separator divides both hidden sections. Icons to its left are always hidden; icons between it and the main arrow are regular hidden icons. A second arrow appears only after the regular section is expanded.";
+"behavior.alwaysHidden" = "Use macOS overflow for always-hidden icons";
+"behavior.alwaysHidden.help" = "In Arrange mode, | divides both hidden sections. Icons to its left move into the native macOS « menu; icons between | and the MenuBarFold arrow are regular hidden icons.";
 "behavior.privacy" = "Privacy indicators";
 "behavior.captureProtection" = "Show the full menu bar while a microphone or camera is active";
 "behavior.captureProtection.help" = "Recommended. macOS 27 assessment mode hides the wide camera and microphone activity capsule. MenuBarFold temporarily releases its restriction so that indicator remains visible.";
@@ -102,4 +100,4 @@
 "about.macos27.title" = "Why this build is outside the App Store";
 "about.macos27.detail" = "macOS 27 exposes icon filtering only through a private system framework tied to assessment mode. MenuBarFold loads it at runtime and fails open if Apple changes it. This requires a direct, non-sandboxed build.";
 "about.acknowledgements.title" = "Acknowledgements";
-"about.acknowledgements.detail" = "The macOS 27 visibility technique and safety findings were informed by the MIT-licensed Hidden Bar and MenuBarHider projects. MenuBarFold is an independent SwiftUI and AppKit implementation.";
+"about.acknowledgements.detail" = "The macOS 27 visibility and native overflow techniques were informed by the MIT-licensed Hidden Bar, MenuBarHider, and MenubarHide projects. MenuBarFold is an independent SwiftUI and AppKit implementation.";
