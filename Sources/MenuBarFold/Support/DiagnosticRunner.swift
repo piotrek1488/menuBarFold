@@ -13,5 +13,7 @@ enum DiagnosticRunner {
     print("Native visibility bridge: \(bridgeAvailable ? "available" : "unavailable")")
     print("Accessibility: \(accessibilityGranted ? "granted" : "not granted")")
     print("Running as app bundle: \(isBundled ? "yes" : "no")")
+    print("Bundle path: \(Bundle.main.bundleURL.path)")
+    print("Bundle identifier: \(Bundle.main.bundleIdentifier ?? "unknown")")
   }
 }

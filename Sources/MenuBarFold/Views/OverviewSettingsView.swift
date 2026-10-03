@@ -60,6 +60,11 @@ struct OverviewSettingsView: View {
               model.openAccessibilitySettings()
             }
           }
+
+          Text(L10n.string("permission.troubleshooting", language: model.language))
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .fixedSize(horizontal: false, vertical: true)
         }
       }
     }

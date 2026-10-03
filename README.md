@@ -32,7 +32,9 @@ This is a direct-distribution app. The native visibility service is a private fr
 - macOS 27.0 or later. The source compiles against macOS 14+ for CI, but the packaged app declares macOS 27 as its minimum runtime.
 - Accessibility permission.
 - The app must be distributed outside the Mac App Store and remain unsandboxed.
-- For stable Accessibility authorization, install the signed build in `/Applications`.
+- A stable code-signing identity is required for Accessibility authorization to survive rebuilds. The build script automatically uses the first valid code-signing certificate in your keychain. You can choose one explicitly with `CODE_SIGN_IDENTITY="Apple Development: Name (TEAMID)"`.
+- If no certificate is available, the script falls back to ad-hoc signing and prints a warning. In that mode macOS can treat every rebuild as a different app even when the old entry still looks enabled in System Settings.
+- For normal use, keep one signed copy in `/Applications`; do not run an additional development copy at the same time.
 
 ## Build and run
 

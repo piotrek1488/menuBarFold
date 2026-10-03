@@ -15,10 +15,39 @@ APP_RESOURCES="$APP_CONTENTS/Resources"
 APP_BINARY="$APP_MACOS/$APP_NAME"
 INFO_PLIST="$APP_CONTENTS/Info.plist"
 MODULE_CACHE="$ROOT_DIR/.build/module-cache"
+SIGNING_IDENTITY="${CODE_SIGN_IDENTITY:-}"
 
 export CLANG_MODULE_CACHE_PATH="$MODULE_CACHE/clang"
 export SWIFTPM_MODULECACHE_OVERRIDE="$MODULE_CACHE/swiftpm"
 mkdir -p "$CLANG_MODULE_CACHE_PATH" "$SWIFTPM_MODULECACHE_OVERRIDE"
+
+resolve_signing_identity() {
+  if [[ -n "$SIGNING_IDENTITY" ]]; then
+    return
+  fi
+
+  SIGNING_IDENTITY="$(
+    security find-identity -v -p codesigning 2>/dev/null \
+      | awk -F'"' '/^[[:space:]]*[0-9]+\)/ { print $2; exit }'
+  )"
+}
+
+sign_app() {
+  resolve_signing_identity
+
+  if [[ -n "$SIGNING_IDENTITY" ]]; then
+    codesign --force --deep --sign "$SIGNING_IDENTITY" "$APP_BUNDLE" >/dev/null
+    echo "Signed $APP_NAME with: $SIGNING_IDENTITY"
+    return
+  fi
+
+  codesign --force --deep --sign - "$APP_BUNDLE" >/dev/null
+  cat >&2 <<WARNING
+Warning: no persistent code-signing identity was found, so $APP_NAME was signed ad-hoc.
+macOS may treat every rebuilt binary as a different app and keep Accessibility disabled.
+Set CODE_SIGN_IDENTITY to a stable certificate name, or install an Apple Development certificate.
+WARNING
+}
 
 build_app() {
   swift build --disable-sandbox
@@ -87,11 +116,11 @@ build_app() {
 PLIST
 
   printf 'APPL????' >"$APP_CONTENTS/PkgInfo"
-  codesign --force --deep --sign - "$APP_BUNDLE" >/dev/null
+  sign_app
 }
 
 open_app() {
-  /usr/bin/open -n "$APP_BUNDLE"
+  /usr/bin/open "$APP_BUNDLE"
 }
 
 pkill -x "$APP_NAME" >/dev/null 2>&1 || true

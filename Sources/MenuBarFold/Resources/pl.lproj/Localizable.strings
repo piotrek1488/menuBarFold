@@ -12,6 +12,7 @@
 "permission.explanation" = "MenuBarFold odczytuje wyłącznie położenie ikon i aplikacje, do których należą. Nie czyta ekranu, klawiszy, plików ani zawartości menu.";
 "permission.request" = "Przyznaj dostęp";
 "permission.openSettings" = "Otwórz Ustawienia systemowe";
+"permission.troubleshooting" = "Jeżeli MenuBarFold jest już włączony, ale nadal czeka na uprawnienie, usuń stary wpis MenuBarFold, dodaj ponownie tę kopię i uruchom ją jeszcze raz. Jest to potrzebne tylko raz po przejściu z podpisu tymczasowego na stały.";
 
 "status.expanded" = "Pasek menu jest rozwinięty";
 "status.expanded.detail" = "Zwykła ukryta sekcja jest teraz widoczna.";

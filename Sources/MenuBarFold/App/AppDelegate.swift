@@ -44,13 +44,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
   private func ensureSingleInstance() -> Bool {
     let ownProcessIdentifier = ProcessInfo.processInfo.processIdentifier
     let ownBundleIdentifier = Bundle.main.bundleIdentifier
-    let ownBundleURL = Bundle.main.bundleURL
 
     guard
       let existing = NSWorkspace.shared.runningApplications.first(where: {
         $0.processIdentifier != ownProcessIdentifier
           && $0.bundleIdentifier == ownBundleIdentifier
-          && $0.bundleURL == ownBundleURL
       })
     else {
       return true

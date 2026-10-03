@@ -12,6 +12,7 @@
 "permission.explanation" = "MenuBarFold reads only the positions and owning apps of menu bar items. It does not read your screen, keystrokes, files, or menu contents.";
 "permission.request" = "Grant Access";
 "permission.openSettings" = "Open System Settings";
+"permission.troubleshooting" = "If MenuBarFold is already enabled there but still waits for permission, remove the old MenuBarFold entry, add this copy again, and relaunch it. This is required once after replacing an ad-hoc build with a persistently signed build.";
 
 "status.expanded" = "Menu bar expanded";
 "status.expanded.detail" = "Your regular hidden section is visible.";
