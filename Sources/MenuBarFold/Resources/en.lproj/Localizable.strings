@@ -22,7 +22,7 @@
 "installation.error.detail" = "%@\n\nYou can also drag MenuBarFold.app into the system Applications folder.";
 
 "status.expanded" = "Menu bar expanded";
-"status.expanded.detail" = "Regular hidden icons are visible. Always-hidden icons use the macOS « menu on a notched-only setup and a compact second arrow with external displays.";
+"status.expanded.detail" = "Regular hidden icons are visible. Use the second arrow to show or hide always-hidden icons.";
 "status.arranging" = "Arrangement mode";
 "status.arranging.detail" = "Hold Command: place always-hidden icons left of |, regular hidden icons between | and the MenuBarFold arrow, and visible icons to the right.";
 "status.scanning" = "Reading menu bar layout";
@@ -50,7 +50,7 @@
 "setup.step2.title" = "Arrange your sections";
 "setup.step2.detail" = "Hold Command and drag regular hidden icons left of the main arrow. Icons left of the | separator belong to the always-hidden section.";
 "setup.step3.title" = "Use both controls";
-"setup.step3.detail" = "The main arrow controls regular hidden icons. On external displays, a second arrow appears only after the regular section opens. A notched-only setup uses the macOS « menu.";
+"setup.step3.detail" = "The main arrow controls regular hidden icons. A second arrow appears only after the regular section opens and controls always-hidden icons.";
 "setup.arrange" = "Arrange Icons";
 "setup.finish" = "Finish Setup";
 
@@ -66,7 +66,7 @@
 "behavior.hoverReveal" = "Expand after hovering over the menu bar";
 "behavior.sections" = "Sections";
 "behavior.alwaysHidden" = "Enable an always-hidden section";
-"behavior.alwaysHidden.help" = "In Arrange mode, | divides both hidden sections. Icons to its left are always hidden; icons between | and the main arrow are regular hidden icons. MenuBarFold uses the macOS « menu only when every active display has a notch-safe status area; otherwise it shows a compact second arrow.";
+"behavior.alwaysHidden.help" = "In Arrange mode, | divides both hidden sections. Icons to its left are always hidden; icons between | and the main arrow are regular hidden icons. The second arrow appears only after the regular section opens.";
 "behavior.privacy" = "Privacy indicators";
 "behavior.captureProtection" = "Show the full menu bar while a microphone or camera is active";
 "behavior.captureProtection.help" = "Recommended. macOS 27 assessment mode hides the wide camera and microphone activity capsule. MenuBarFold temporarily releases its restriction so that indicator remains visible.";
@@ -102,4 +102,4 @@
 "about.macos27.title" = "Why this build is outside the App Store";
 "about.macos27.detail" = "macOS 27 exposes icon filtering only through a private system framework tied to assessment mode. MenuBarFold loads it at runtime and fails open if Apple changes it. This requires a direct, non-sandboxed build.";
 "about.acknowledgements.title" = "Acknowledgements";
-"about.acknowledgements.detail" = "The macOS 27 visibility and native overflow techniques were informed by the MIT-licensed Hidden Bar, MenuBarHider, and MenubarHide projects. MenuBarFold is an independent SwiftUI and AppKit implementation.";
+"about.acknowledgements.detail" = "The macOS 27 visibility research was informed by the MIT-licensed Hidden Bar, MenuBarHider, and MenubarHide projects. MenuBarFold is an independent SwiftUI and AppKit implementation.";

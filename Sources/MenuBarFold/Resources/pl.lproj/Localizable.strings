@@ -22,7 +22,7 @@
 "installation.error.detail" = "%@\n\nMożesz również przeciągnąć MenuBarFold.app do systemowego katalogu Aplikacje.";
 
 "status.expanded" = "Pasek menu jest rozwinięty";
-"status.expanded.detail" = "Zwykłe ukryte ikony są widoczne. Przy samym ekranie z notchem ikony zawsze ukryte otwiera systemowe «, a z monitorem zewnętrznym kompaktowa druga strzałka.";
+"status.expanded.detail" = "Zwykłe ukryte ikony są widoczne. Druga strzałka pokazuje lub ukrywa ikony zawsze ukryte.";
 "status.arranging" = "Tryb układania";
 "status.arranging.detail" = "Przytrzymaj Command: ikony zawsze ukryte ustaw po lewej stronie |, zwykłe ukryte między | i strzałką MenuBarFold, a widoczne po prawej.";
 "status.scanning" = "Odczytywanie układu paska";
@@ -50,7 +50,7 @@
 "setup.step2.title" = "Ułóż sekcje";
 "setup.step2.detail" = "Przytrzymaj Command i przeciągnij zwykłe ukryte ikony w lewo od głównej strzałki. Ikony na lewo od separatora | trafią do sekcji zawsze ukrytej.";
 "setup.step3.title" = "Korzystaj z obu przycisków";
-"setup.step3.detail" = "Główna strzałka steruje zwykłymi ukrytymi ikonami. Na monitorach zewnętrznych druga strzałka pojawia się dopiero po rozwinięciu zwykłej sekcji. Przy samym ekranie z notchem używane jest systemowe «.";
+"setup.step3.detail" = "Główna strzałka steruje zwykłymi ukrytymi ikonami. Druga strzałka pojawia się dopiero po rozwinięciu zwykłej sekcji i steruje ikonami zawsze ukrytymi.";
 "setup.arrange" = "Ułóż ikony";
 "setup.finish" = "Zakończ konfigurację";
 
@@ -66,7 +66,7 @@
 "behavior.hoverReveal" = "Rozwijaj po najechaniu na pasek menu";
 "behavior.sections" = "Sekcje";
 "behavior.alwaysHidden" = "Włącz sekcję ikon zawsze ukrytych";
-"behavior.alwaysHidden.help" = "W trybie układania separator | dzieli obie ukryte sekcje. Ikony po jego lewej stronie są zawsze ukryte, a między | i główną strzałką znajdują się zwykłe ukryte ikony. MenuBarFold używa systemowego « tylko wtedy, gdy każdy aktywny ekran ma bezpieczny obszar obok notcha; w pozostałych układach pokazuje kompaktową drugą strzałkę.";
+"behavior.alwaysHidden.help" = "W trybie układania separator | dzieli obie ukryte sekcje. Ikony po jego lewej stronie są zawsze ukryte, a między | i główną strzałką znajdują się zwykłe ukryte ikony. Druga strzałka pojawia się dopiero po rozwinięciu zwykłej sekcji.";
 "behavior.privacy" = "Wskaźniki prywatności";
 "behavior.captureProtection" = "Pokazuj cały pasek, gdy działa mikrofon lub kamera";
 "behavior.captureProtection.help" = "Zalecane. Tryb assessment w macOS 27 ukrywa szeroki wskaźnik użycia kamery i mikrofonu. MenuBarFold tymczasowo zwalnia ograniczenie, aby wskaźnik pozostał widoczny.";
@@ -102,4 +102,4 @@
 "about.macos27.title" = "Dlaczego tej wersji nie będzie w App Store";
 "about.macos27.detail" = "macOS 27 udostępnia filtrowanie ikon jedynie przez prywatny framework systemowy powiązany z trybem assessment. MenuBarFold ładuje go dynamicznie i pokazuje cały pasek, jeśli Apple go zmieni. Wymaga to bezpośrednio dystrybuowanej aplikacji bez sandboxa.";
 "about.acknowledgements.title" = "Podziękowania";
-"about.acknowledgements.detail" = "Mechanizmy widoczności i natywnego menu przepełnienia w macOS 27 zostały opracowane na podstawie projektów Hidden Bar, MenuBarHider i MenubarHide na licencji MIT. MenuBarFold jest niezależną implementacją w SwiftUI i AppKit.";
+"about.acknowledgements.detail" = "Badania mechanizmu widoczności w macOS 27 bazowały na projektach Hidden Bar, MenuBarHider i MenubarHide na licencji MIT. MenuBarFold jest niezależną implementacją w SwiftUI i AppKit.";

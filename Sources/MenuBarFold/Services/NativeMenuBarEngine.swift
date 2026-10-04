@@ -13,14 +13,13 @@ protocol MenuBarBoundaryProviding: AnyObject {
 enum AlwaysHiddenBoundaryMode: Equatable {
   case disabled
   case boundary
-  case nativeOverflow
   case customControl(isExpanded: Bool)
 
   var showsSeparator: Bool {
     switch self {
     case .boundary, .customControl:
       return true
-    case .disabled, .nativeOverflow:
+    case .disabled:
       return false
     }
   }
@@ -60,7 +59,6 @@ final class NativeMenuBarEngine {
   private let ownBundleIdentifier: String?
   private let displays: () -> [MenuBarDisplay]
   private let isLeftToRight: () -> Bool
-  private let alwaysHiddenPresentationStyle: () -> AlwaysHiddenPresentationStyle
   private let isSupportedOperatingSystem: () -> Bool
   private let isSupportedApplicationLocation: () -> Bool
 
@@ -86,15 +84,6 @@ final class NativeMenuBarEngine {
     ownBundleIdentifier: String? = Bundle.main.bundleIdentifier,
     displays: @escaping () -> [MenuBarDisplay] = MenuBarDisplayInventory.current,
     isLeftToRight: (() -> Bool)? = nil,
-    alwaysHiddenPresentationStyle: @escaping () -> AlwaysHiddenPresentationStyle = {
-      let displays = NSScreen.screens.map { screen in
-        NativeOverflowGeometry.Display(
-          width: screen.frame.width,
-          statusAreaWidth: screen.auxiliaryTopRightArea?.width
-        )
-      }
-      return AlwaysHiddenPresentationStyle.resolve(displays: displays)
-    },
     isSupportedOperatingSystem: @escaping () -> Bool = {
       ProcessInfo.processInfo.operatingSystemVersion.majorVersion >= 27
     },
@@ -111,7 +100,6 @@ final class NativeMenuBarEngine {
       isLeftToRight ?? {
         NSApplication.shared.userInterfaceLayoutDirection == .leftToRight
       }
-    self.alwaysHiddenPresentationStyle = alwaysHiddenPresentationStyle
     self.isSupportedOperatingSystem = isSupportedOperatingSystem
     self.isSupportedApplicationLocation = isSupportedApplicationLocation
 
@@ -128,7 +116,7 @@ final class NativeMenuBarEngine {
     case .collapsed:
       return true
     case .expanded:
-      return alwaysHiddenEnabled && alwaysHiddenPresentationStyle() == .customControl
+      return alwaysHiddenEnabled
     case .fullyExpanded, .arranging:
       return false
     }
@@ -166,7 +154,6 @@ final class NativeMenuBarEngine {
 
   func collapse() {
     presentation = .collapsed
-    showArrangementBoundaryIfNeeded()
 
     guard validateAvailabilityAndPermission() else { return }
 
@@ -186,7 +173,6 @@ final class NativeMenuBarEngine {
 
   func expand() {
     presentation = .expanded
-    showArrangementBoundaryIfNeeded()
 
     guard alwaysHiddenEnabled else {
       releaseAssertion()
@@ -218,7 +204,6 @@ final class NativeMenuBarEngine {
 
   func toggleAlwaysHiddenSection() {
     guard alwaysHiddenEnabled,
-      alwaysHiddenPresentationStyle() == .customControl,
       presentation != .collapsed
     else {
       return
@@ -293,13 +278,7 @@ final class NativeMenuBarEngine {
     switch presentation {
     case .collapsed: collapse()
     case .expanded: expand()
-    case .fullyExpanded:
-      if alwaysHiddenPresentationStyle() == .nativeOverflow {
-        presentation = .expanded
-        expand()
-      } else {
-        expandAlwaysHiddenSection()
-      }
+    case .fullyExpanded: expandAlwaysHiddenSection()
     case .arranging: arrange()
     }
   }
@@ -456,23 +435,18 @@ final class NativeMenuBarEngine {
       return
     }
 
-    let presentationStyle = alwaysHiddenPresentationStyle()
     let allowedSections: Set<MenuBarSection>
     let resultingStatus: AppStatus
 
     switch target {
     case .collapsed:
-      allowedSections =
-        alwaysHiddenEnabled && presentationStyle == .nativeOverflow
-        ? [.visible, .alwaysHidden]
-        : [.visible]
+      allowedSections = [.visible]
       resultingStatus = .collapsed
     case .expanded:
-      if presentationStyle == .nativeOverflow || !alwaysHiddenEnabled || alwaysHiddenCount == 0 {
+      if !alwaysHiddenEnabled || alwaysHiddenCount == 0 {
         releaseAssertion()
         showAlwaysHiddenPresentationIfNeeded(
           alwaysHiddenCount: alwaysHiddenCount,
-          style: presentationStyle,
           isExpanded: false
         )
         publish(
@@ -489,7 +463,6 @@ final class NativeMenuBarEngine {
       releaseAssertion()
       showAlwaysHiddenPresentationIfNeeded(
         alwaysHiddenCount: alwaysHiddenCount,
-        style: presentationStyle,
         isExpanded: true
       )
       publish(
@@ -559,7 +532,6 @@ final class NativeMenuBarEngine {
         )
         self.showAlwaysHiddenPresentationIfNeeded(
           alwaysHiddenCount: alwaysHiddenCount,
-          style: presentationStyle,
           isExpanded: false
         )
         self.publish(
@@ -610,28 +582,22 @@ final class NativeMenuBarEngine {
 
   private func showAlwaysHiddenPresentationIfNeeded(
     alwaysHiddenCount: Int,
-    style: AlwaysHiddenPresentationStyle,
     isExpanded: Bool
   ) {
     Self.logger.info(
-      "Always-hidden presentation: style=\(String(describing: style), privacy: .public), count=\(alwaysHiddenCount, privacy: .public), expanded=\(isExpanded, privacy: .public)"
+      "Always-hidden presentation: style=customControl, count=\(alwaysHiddenCount, privacy: .public), expanded=\(isExpanded, privacy: .public)"
     )
     let mode: AlwaysHiddenBoundaryMode
     if !alwaysHiddenEnabled || alwaysHiddenCount == 0 {
       mode = .disabled
     } else {
-      switch style {
-      case .nativeOverflow:
-        mode = .nativeOverflow
-      case .customControl:
-        switch presentation {
-        case .collapsed:
-          mode = .disabled
-        case .expanded, .fullyExpanded:
-          mode = .customControl(isExpanded: isExpanded)
-        case .arranging:
-          mode = .boundary
-        }
+      switch presentation {
+      case .collapsed:
+        mode = .disabled
+      case .expanded, .fullyExpanded:
+        mode = .customControl(isExpanded: isExpanded)
+      case .arranging:
+        mode = .boundary
       }
     }
     boundaryProvider?.setAlwaysHiddenBoundaryMode(mode)

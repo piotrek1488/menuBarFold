@@ -21,18 +21,6 @@ enum DiagnosticRunner {
     print("Supported application location: \(isInApplications ? "yes" : "no")")
 
     let screens = NSScreen.screens
-    let displays = screens.map { screen in
-      NativeOverflowGeometry.Display(
-        width: screen.frame.width,
-        statusAreaWidth: screen.auxiliaryTopRightArea?.width
-      )
-    }
-    let unitLength = NativeOverflowGeometry.unitLength(displays: displays)
-    let activeSpacerCount = NativeOverflowGeometry.activeSpacerCount(
-      unitLength: unitLength,
-      displays: displays
-    )
-
     print("Displays: \(screens.count)")
     for (index, screen) in screens.enumerated() {
       let screenNumber =
@@ -42,8 +30,6 @@ enum DiagnosticRunner {
         "Display \(index): id=\(identifier), frame=\(screen.frame), visible=\(screen.visibleFrame), scale=\(screen.backingScaleFactor), safeTop=\(screen.safeAreaInsets.top), auxiliaryRight=\(String(describing: screen.auxiliaryTopRightArea))"
       )
     }
-    print(
-      "Native overflow: unit=\(unitLength), spacers=\(activeSpacerCount), coverage=\(NativeOverflowGeometry.coveredWidth(unitLength: unitLength, activeSpacerCount: activeSpacerCount))"
-    )
+    print("Always-hidden control: stable compact status item")
   }
 }

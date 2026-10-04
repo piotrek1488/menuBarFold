@@ -35,7 +35,6 @@ final class StatusBarController: NSObject, MenuBarBoundaryProviding {
     withLength: NSStatusItem.variableLength
   )
   private let alwaysHiddenToggleItem = NSStatusBar.system.statusItem(withLength: 0)
-  private let nativeOverflowSpacerItems: [NSStatusItem]
   private let alwaysHiddenSeparatorItem: NSStatusItem
 
   private var autoCollapseTimer: Timer?
@@ -55,13 +54,6 @@ final class StatusBarController: NSObject, MenuBarBoundaryProviding {
     self.model = model
     self.engine = engine ?? NativeMenuBarEngine()
     self.launchAtLoginService = launchAtLoginService
-    self.nativeOverflowSpacerItems = (0..<NativeOverflowGeometry.spacerCount).map { index in
-      let item = NSStatusBar.system.statusItem(withLength: 0)
-      item.autosaveName = "MenuBarFold.NativeOverflowSpacer.\(index).v1"
-      item.isVisible = false
-      item.button?.setAccessibilityElement(false)
-      return item
-    }
     self.alwaysHiddenSeparatorItem = NSStatusBar.system.statusItem(withLength: 0)
     super.init()
 
@@ -151,7 +143,7 @@ final class StatusBarController: NSObject, MenuBarBoundaryProviding {
     }
 
     alwaysHiddenToggleItem.autosaveName = "MenuBarFold.AlwaysHiddenToggle"
-    alwaysHiddenToggleItem.isVisible = false
+    alwaysHiddenToggleItem.isVisible = true
     if let button = alwaysHiddenToggleItem.button {
       button.target = self
       button.action = #selector(alwaysHiddenItemPressed(_:))
@@ -328,16 +320,16 @@ final class StatusBarController: NSObject, MenuBarBoundaryProviding {
     )
     primaryToggleItem.button?.toolTip = "MenuBarFold — \(description)"
 
-    let alwaysHiddenActionKey =
-      model.isAlwaysHiddenSectionExpanded
-      ? "control.alwaysHidden.collapse"
-      : "control.alwaysHidden.expand"
-    updateChevron(
-      for: alwaysHiddenToggleItem,
-      pointsRight: model.isAlwaysHiddenSectionExpanded,
-      accessibilityKey: alwaysHiddenActionKey,
-      language: language
-    )
+    if case .customControl(let isExpanded) = alwaysHiddenBoundaryMode {
+      updateChevron(
+        for: alwaysHiddenToggleItem,
+        pointsRight: isExpanded,
+        accessibilityKey: isExpanded
+          ? "control.alwaysHidden.collapse"
+          : "control.alwaysHidden.expand",
+        language: language
+      )
+    }
 
     if alwaysHiddenBoundaryMode.showsSeparator {
       updateAlwaysHiddenSeparatorAppearance()
@@ -356,15 +348,16 @@ final class StatusBarController: NSObject, MenuBarBoundaryProviding {
     image?.isTemplate = true
     item.button?.image = image
     item.button?.toolTip = description
+    item.button?.setAccessibilityElement(true)
     item.button?.setAccessibilityLabel(description)
   }
 
   private func applyAlwaysHiddenBoundaryMode() {
     alwaysHiddenToggleItem.length = 0
-    alwaysHiddenToggleItem.isVisible = false
-    for item in nativeOverflowSpacerItems {
-      item.length = 0
-      item.isVisible = false
+    if let toggleButton = alwaysHiddenToggleItem.button {
+      toggleButton.image = nil
+      toggleButton.toolTip = nil
+      toggleButton.setAccessibilityElement(false)
     }
 
     guard let button = alwaysHiddenSeparatorItem.button else { return }
@@ -372,52 +365,16 @@ final class StatusBarController: NSObject, MenuBarBoundaryProviding {
     switch alwaysHiddenBoundaryMode {
     case .disabled:
       alwaysHiddenSeparatorItem.length = 0
-      alwaysHiddenSeparatorItem.isVisible = true
       button.image = nil
       button.toolTip = nil
       button.setAccessibilityElement(false)
     case .boundary:
       alwaysHiddenSeparatorItem.length = 8
-      alwaysHiddenSeparatorItem.isVisible = true
       updateAlwaysHiddenSeparatorAppearance()
-    case .nativeOverflow:
-      let displays = Self.nativeOverflowDisplays()
-      let unitLength = NativeOverflowGeometry.unitLength(displays: displays)
-      let activeSpacerCount = NativeOverflowGeometry.activeSpacerCount(
-        unitLength: unitLength,
-        displays: displays
-      )
-      let coveredWidth = NativeOverflowGeometry.coveredWidth(
-        unitLength: unitLength,
-        activeSpacerCount: activeSpacerCount
-      )
-
-      Self.logger.info(
-        "Native overflow: displays=\(displays.count, privacy: .public), unit=\(unitLength, privacy: .public), spacers=\(activeSpacerCount, privacy: .public), coverage=\(coveredWidth, privacy: .public)"
-      )
-      for (index, display) in displays.enumerated() {
-        Self.logger.info(
-          "Overflow display \(index, privacy: .public): width=\(display.width, privacy: .public), statusArea=\(display.statusAreaWidth, privacy: .public)"
-        )
-      }
-
-      button.image = nil
-      button.toolTip = nil
-      button.setAccessibilityElement(false)
-      alwaysHiddenSeparatorItem.isVisible = true
-      alwaysHiddenSeparatorItem.length = unitLength
-
-      for (index, item) in nativeOverflowSpacerItems.enumerated() {
-        let isActive = index < activeSpacerCount
-        item.length = isActive ? unitLength : 0
-        item.isVisible = isActive
-      }
     case .customControl(let isExpanded):
       alwaysHiddenSeparatorItem.length = 8
-      alwaysHiddenSeparatorItem.isVisible = true
       updateAlwaysHiddenSeparatorAppearance()
       alwaysHiddenToggleItem.length = 18
-      alwaysHiddenToggleItem.isVisible = true
       updateChevron(
         for: alwaysHiddenToggleItem,
         pointsRight: isExpanded,
@@ -440,16 +397,6 @@ final class StatusBarController: NSObject, MenuBarBoundaryProviding {
     button.toolTip = description
     button.setAccessibilityElement(true)
     button.setAccessibilityLabel(description)
-  }
-
-  private static func nativeOverflowDisplays() -> [NativeOverflowGeometry.Display] {
-    NSScreen.screens.map { screen in
-      let statusAreaWidth = screen.auxiliaryTopRightArea?.width
-      return NativeOverflowGeometry.Display(
-        width: screen.frame.width,
-        statusAreaWidth: statusAreaWidth
-      )
-    }
   }
 
   private func preferenceChanged(_ change: PreferenceChange) {
