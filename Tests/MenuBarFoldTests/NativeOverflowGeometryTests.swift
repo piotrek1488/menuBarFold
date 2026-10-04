@@ -6,6 +6,28 @@ import XCTest
 final class NativeOverflowGeometryTests: XCTestCase {
   typealias Display = NativeOverflowGeometry.Display
 
+  func testPresentationStyleUsesNativeOverflowOnlyWhenEveryDisplayHasNotchGeometry() {
+    XCTAssertEqual(
+      AlwaysHiddenPresentationStyle.resolve(
+        displays: [Display(width: 1_710, statusAreaWidth: 751)]
+      ),
+      .nativeOverflow
+    )
+    XCTAssertEqual(
+      AlwaysHiddenPresentationStyle.resolve(
+        displays: [
+          Display(width: 1_710, statusAreaWidth: 751),
+          Display(width: 2_560),
+        ]
+      ),
+      .customControl
+    )
+    XCTAssertEqual(
+      AlwaysHiddenPresentationStyle.resolve(displays: []),
+      .customControl
+    )
+  }
+
   func testPlainDisplayStaysBelowHalfWidthDiscardCliff() {
     XCTAssertEqual(
       NativeOverflowGeometry.unitLength(displays: [Display(width: 2_056)]),

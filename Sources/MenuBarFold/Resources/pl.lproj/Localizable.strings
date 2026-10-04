@@ -22,13 +22,13 @@
 "installation.error.detail" = "%@\n\nMożesz również przeciągnąć MenuBarFold.app do systemowego katalogu Aplikacje.";
 
 "status.expanded" = "Pasek menu jest rozwinięty";
-"status.expanded.detail" = "Zwykłe ukryte ikony są widoczne. Systemowy przycisk « otwiera ikony zawsze ukryte.";
+"status.expanded.detail" = "Zwykłe ukryte ikony są widoczne. Przy samym ekranie z notchem ikony zawsze ukryte otwiera systemowe «, a z monitorem zewnętrznym kompaktowa druga strzałka.";
 "status.arranging" = "Tryb układania";
 "status.arranging.detail" = "Przytrzymaj Command: ikony zawsze ukryte ustaw po lewej stronie |, zwykłe ukryte między | i strzałką MenuBarFold, a widoczne po prawej.";
 "status.scanning" = "Odczytywanie układu paska";
 "status.scanning.detail" = "MenuBarFold sprawdza, do której sekcji należy każda aplikacja.";
 "status.collapsed" = "Pasek menu jest zwinięty";
-"status.collapsed.detail" = "Strzałka MenuBarFold ukrywa zwykłe ikony. Systemowy przycisk « nadal otwiera ikony zawsze ukryte.";
+"status.collapsed.detail" = "Strzałka MenuBarFold zwija obie ukryte sekcje. Widoczny pozostaje tylko jeden przycisk aplikacji.";
 "status.pausedForCapture" = "Tymczasowo rozwinięty dla prywatności";
 "status.pausedForCapture.detail" = "Mikrofon lub kamera jest aktywna, więc MenuBarFold zachowuje systemowe wskaźniki prywatności.";
 "status.needsAccessibility" = "Oczekiwanie na uprawnienie";
@@ -40,7 +40,9 @@
 "action.collapse" = "Zwiń";
 "control.hidden.expand" = "Pokaż zwykłe ukryte ikony paska menu";
 "control.hidden.collapse" = "Ukryj zwykłe ukryte ikony paska menu";
-"control.alwaysHidden.separator" = "Granica ikon przechowywanych w systemowym menu przepełnienia";
+"control.alwaysHidden.expand" = "Pokaż ikony zawsze ukryte";
+"control.alwaysHidden.collapse" = "Ukryj ikony zawsze ukryte";
+"control.alwaysHidden.separator" = "Granica sekcji ikon zawsze ukrytych";
 
 "setup.title" = "Konfiguracja w trzech krokach";
 "setup.step1.title" = "Przyznaj dostęp Accessibility";
@@ -48,7 +50,7 @@
 "setup.step2.title" = "Ułóż sekcje";
 "setup.step2.detail" = "Przytrzymaj Command i przeciągnij zwykłe ukryte ikony w lewo od głównej strzałki. Ikony na lewo od separatora | trafią do sekcji zawsze ukrytej.";
 "setup.step3.title" = "Korzystaj z obu przycisków";
-"setup.step3.detail" = "Strzałka MenuBarFold steruje zwykłymi ukrytymi ikonami. Systemowy przycisk « otwiera ikony zawsze ukryte w natywnym menu macOS.";
+"setup.step3.detail" = "Główna strzałka steruje zwykłymi ukrytymi ikonami. Na monitorach zewnętrznych druga strzałka pojawia się dopiero po rozwinięciu zwykłej sekcji. Przy samym ekranie z notchem używane jest systemowe «.";
 "setup.arrange" = "Ułóż ikony";
 "setup.finish" = "Zakończ konfigurację";
 
@@ -63,8 +65,8 @@
 "behavior.seconds" = "%d s";
 "behavior.hoverReveal" = "Rozwijaj po najechaniu na pasek menu";
 "behavior.sections" = "Sekcje";
-"behavior.alwaysHidden" = "Używaj systemowego menu dla ikon zawsze ukrytych";
-"behavior.alwaysHidden.help" = "W trybie układania separator | dzieli obie ukryte sekcje. Ikony po jego lewej stronie trafiają do natywnego menu macOS pod przyciskiem «, a między | i strzałką MenuBarFold znajdują się zwykłe ukryte ikony.";
+"behavior.alwaysHidden" = "Włącz sekcję ikon zawsze ukrytych";
+"behavior.alwaysHidden.help" = "W trybie układania separator | dzieli obie ukryte sekcje. Ikony po jego lewej stronie są zawsze ukryte, a między | i główną strzałką znajdują się zwykłe ukryte ikony. MenuBarFold używa systemowego « tylko wtedy, gdy każdy aktywny ekran ma bezpieczny obszar obok notcha; w pozostałych układach pokazuje kompaktową drugą strzałkę.";
 "behavior.privacy" = "Wskaźniki prywatności";
 "behavior.captureProtection" = "Pokazuj cały pasek, gdy działa mikrofon lub kamera";
 "behavior.captureProtection.help" = "Zalecane. Tryb assessment w macOS 27 ukrywa szeroki wskaźnik użycia kamery i mikrofonu. MenuBarFold tymczasowo zwalnia ograniczenie, aby wskaźnik pozostał widoczny.";

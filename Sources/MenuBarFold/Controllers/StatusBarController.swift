@@ -34,6 +34,7 @@ final class StatusBarController: NSObject, MenuBarBoundaryProviding {
   private let primaryToggleItem = NSStatusBar.system.statusItem(
     withLength: NSStatusItem.variableLength
   )
+  private let alwaysHiddenToggleItem = NSStatusBar.system.statusItem(withLength: 0)
   private let nativeOverflowSpacerItems: [NSStatusItem]
   private let alwaysHiddenSeparatorItem: NSStatusItem
 
@@ -149,6 +150,15 @@ final class StatusBarController: NSObject, MenuBarBoundaryProviding {
       button.imagePosition = .imageOnly
     }
 
+    alwaysHiddenToggleItem.autosaveName = "MenuBarFold.AlwaysHiddenToggle"
+    alwaysHiddenToggleItem.isVisible = false
+    if let button = alwaysHiddenToggleItem.button {
+      button.target = self
+      button.action = #selector(alwaysHiddenItemPressed(_:))
+      button.sendAction(on: [.leftMouseUp, .rightMouseUp])
+      button.imagePosition = .imageOnly
+    }
+
     setAlwaysHiddenBoundaryMode(.disabled)
     updateStatusItemAppearance()
   }
@@ -194,6 +204,19 @@ final class StatusBarController: NSObject, MenuBarBoundaryProviding {
       beginArranging()
     } else {
       toggle()
+    }
+  }
+
+  @objc
+  private func alwaysHiddenItemPressed(_ sender: NSStatusBarButton) {
+    let event = NSApp.currentEvent
+    if event?.type == .rightMouseUp {
+      showContextMenu(from: sender)
+    } else if event?.modifierFlags.contains(.option) == true {
+      beginArranging()
+    } else {
+      engine.toggleAlwaysHiddenSection()
+      scheduleAutoCollapseIfNeeded()
     }
   }
 
@@ -263,6 +286,7 @@ final class StatusBarController: NSObject, MenuBarBoundaryProviding {
     model.hiddenAppCount = snapshot.hiddenAppCount
     model.alwaysHiddenAppCount = snapshot.alwaysHiddenAppCount
     model.isHiddenSectionExpanded = snapshot.isHiddenSectionExpanded
+    model.isAlwaysHiddenSectionExpanded = snapshot.isAlwaysHiddenSectionExpanded
     model.lastError = snapshot.error
     updateStatusItemAppearance()
 
@@ -304,7 +328,18 @@ final class StatusBarController: NSObject, MenuBarBoundaryProviding {
     )
     primaryToggleItem.button?.toolTip = "MenuBarFold — \(description)"
 
-    if alwaysHiddenBoundaryMode == .boundary {
+    let alwaysHiddenActionKey =
+      model.isAlwaysHiddenSectionExpanded
+      ? "control.alwaysHidden.collapse"
+      : "control.alwaysHidden.expand"
+    updateChevron(
+      for: alwaysHiddenToggleItem,
+      pointsRight: model.isAlwaysHiddenSectionExpanded,
+      accessibilityKey: alwaysHiddenActionKey,
+      language: language
+    )
+
+    if alwaysHiddenBoundaryMode.showsSeparator {
       updateAlwaysHiddenSeparatorAppearance()
     }
   }
@@ -325,6 +360,8 @@ final class StatusBarController: NSObject, MenuBarBoundaryProviding {
   }
 
   private func applyAlwaysHiddenBoundaryMode() {
+    alwaysHiddenToggleItem.length = 0
+    alwaysHiddenToggleItem.isVisible = false
     for item in nativeOverflowSpacerItems {
       item.length = 0
       item.isVisible = false
@@ -375,6 +412,20 @@ final class StatusBarController: NSObject, MenuBarBoundaryProviding {
         item.length = isActive ? unitLength : 0
         item.isVisible = isActive
       }
+    case .customControl(let isExpanded):
+      alwaysHiddenSeparatorItem.length = 8
+      alwaysHiddenSeparatorItem.isVisible = true
+      updateAlwaysHiddenSeparatorAppearance()
+      alwaysHiddenToggleItem.length = 18
+      alwaysHiddenToggleItem.isVisible = true
+      updateChevron(
+        for: alwaysHiddenToggleItem,
+        pointsRight: isExpanded,
+        accessibilityKey: isExpanded
+          ? "control.alwaysHidden.collapse"
+          : "control.alwaysHidden.expand",
+        language: model.language
+      )
     }
   }
 

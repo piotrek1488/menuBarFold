@@ -23,7 +23,8 @@ The entitlements output must not contain `com.apple.security.app-sandbox`. Test 
 - first-run Accessibility onboarding;
 - installation and relaunch from `/Applications` before filtering is enabled;
 - visible, hidden, and always-hidden placement;
-- the native `«` button opens always-hidden icons while the MenuBarFold arrow controls only regular hidden icons;
+- on a notched-only setup, the native `«` button opens always-hidden icons while the MenuBarFold arrow controls regular hidden icons;
+- with any non-notched external display, native overflow spacers stay disabled and a compact second arrow appears only after the regular hidden section expands;
 - expand, collapse, auto fold, hover and global shortcut;
 - microphone and camera safety pause;
 - external-display connect and disconnect;

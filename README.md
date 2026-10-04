@@ -16,7 +16,7 @@ This is a direct-distribution app. The native visibility service is a private fr
 
 - One-click fold and expand of regular hidden icons from a MenuBarFold arrow that always remains visible.
 - Command-drag arrangement: visible items sit right of the MenuBarFold arrow, regular hidden items sit between the arrow and the `|` boundary, and always-hidden items sit left of `|`.
-- Native macOS 27 overflow for always-hidden icons: MenuBarFold moves them behind the system `«` button, where they remain visible and clickable in Apple's menu.
+- Adaptive always-hidden controls: a notched-only setup uses macOS 27's native `«` overflow menu; if any active display has no notch, MenuBarFold uses a compact second arrow instead of inserting a huge blank area into that display's menu bar.
 - Auto fold with configurable delay.
 - Optional reveal on menu bar hover.
 - Global shortcut presets.
@@ -57,7 +57,7 @@ Other useful commands:
 ./script/build_and_run.sh --logs
 ```
 
-The first launch opens setup. Grant Accessibility access, choose **Arrange Icons**, then hold Command and arrange icons in three zones: always-hidden icons left of `|`, regular hidden icons between `|` and the MenuBarFold arrow, and visible icons to the right. Click the MenuBarFold arrow to leave arrangement mode. Its arrow controls the regular hidden section; the system `«` button opens the always-hidden section.
+The first launch opens setup. Grant Accessibility access, choose **Arrange Icons**, then hold Command and arrange icons in three zones: always-hidden icons left of `|`, regular hidden icons between `|` and the MenuBarFold arrow, and visible icons to the right. Click the MenuBarFold arrow to leave arrangement mode. Its arrow controls the regular hidden section. A notched-only setup opens the always-hidden section through macOS's `«` menu; with an external non-notched display, a compact second arrow appears only after the regular section is expanded.
 
 ## Important macOS 27 limitations
 
@@ -67,7 +67,7 @@ The only macOS 27 service capable of applying an app allow-list belongs to asses
 - Apple system controls such as Clock, Control Center, Wi-Fi, Sound, and Battery stay visible;
 - Now Playing and Live Activities can disappear;
 - clicking the clock may not open Notification Center until the bar is expanded;
-- the native `«` button is owned by macOS; MenuBarFold can place icons behind it but cannot change its appearance or inspect whether its menu is open;
+- the native `«` button is owned by macOS; MenuBarFold can place icons behind it but cannot change its appearance or inspect whether its menu is open. Forcing that overflow on a wide non-notched display leaves a large blank region, so MenuBarFold automatically switches those display setups to its compact second control;
 - macOS may change or remove the private service in a future update.
 
 MenuBarFold releases the restriction while a microphone or camera is active. There is no public API for detecting another app's screen recording, so the wider screen-recording capsule cannot receive the same protection.

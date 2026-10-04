@@ -197,6 +197,119 @@ final class NativeMenuBarEngineTests: XCTestCase {
     XCTAssertEqual(boundary.mode, .boundary)
   }
 
+  func testExternalDisplayUsesCompactControlForAlwaysHiddenSection() throws {
+    let inventory = InventoryMock(
+      isAuthorized: true,
+      items: [
+        MenuBarInventoryItem(
+          bundleIdentifier: "visible.app",
+          frame: CGRect(x: 890, y: 0, width: 20, height: 24)
+        ),
+        MenuBarInventoryItem(
+          bundleIdentifier: "hidden.app",
+          frame: CGRect(x: 690, y: 0, width: 20, height: 24)
+        ),
+        MenuBarInventoryItem(
+          bundleIdentifier: "always.app",
+          frame: CGRect(x: 390, y: 0, width: 20, height: 24)
+        ),
+      ]
+    )
+    let visibility = VisibilityMock()
+    let capture = CaptureMock(isActive: false)
+    let boundary = BoundaryMock()
+    let engine = makeEngine(
+      inventory: inventory,
+      visibility: visibility,
+      capture: capture,
+      boundary: boundary,
+      alwaysHiddenPresentationStyle: { .customControl }
+    )
+    var latest: MenuBarEngineSnapshot?
+    engine.onSnapshot = { latest = $0 }
+    engine.configure(alwaysHiddenEnabled: true, protectCaptureIndicators: false)
+
+    engine.collapse()
+
+    XCTAssertEqual(visibility.activations.last?.bundles, ["own.app", "visible.app"])
+    XCTAssertEqual(boundary.mode, .disabled)
+    XCTAssertEqual(latest?.isHiddenSectionExpanded, false)
+    XCTAssertEqual(latest?.isAlwaysHiddenSectionExpanded, false)
+
+    engine.expand()
+
+    XCTAssertEqual(
+      visibility.activations.last?.bundles,
+      ["hidden.app", "own.app", "visible.app"]
+    )
+    XCTAssertEqual(boundary.mode, .customControl(isExpanded: false))
+    XCTAssertEqual(latest?.isHiddenSectionExpanded, true)
+    XCTAssertEqual(latest?.isAlwaysHiddenSectionExpanded, false)
+
+    let regularSectionAssertion = try XCTUnwrap(visibility.lastAssertion)
+    engine.toggleAlwaysHiddenSection()
+
+    XCTAssertTrue(regularSectionAssertion.didInvalidate)
+    XCTAssertEqual(boundary.mode, .customControl(isExpanded: true))
+    XCTAssertEqual(latest?.isAlwaysHiddenSectionExpanded, true)
+
+    engine.toggleAlwaysHiddenSection()
+
+    XCTAssertEqual(
+      visibility.activations.last?.bundles,
+      ["hidden.app", "own.app", "visible.app"]
+    )
+    XCTAssertEqual(boundary.mode, .customControl(isExpanded: false))
+    XCTAssertEqual(latest?.isAlwaysHiddenSectionExpanded, false)
+
+    engine.collapse()
+
+    XCTAssertEqual(visibility.activations.last?.bundles, ["own.app", "visible.app"])
+    XCTAssertEqual(boundary.mode, .disabled)
+  }
+
+  func testConnectingExternalDisplayReplacesNativeOverflowWithCompactMode() {
+    let inventory = InventoryMock(
+      isAuthorized: true,
+      items: [
+        MenuBarInventoryItem(
+          bundleIdentifier: "visible.app",
+          frame: CGRect(x: 890, y: 0, width: 20, height: 24)
+        ),
+        MenuBarInventoryItem(
+          bundleIdentifier: "always.app",
+          frame: CGRect(x: 390, y: 0, width: 20, height: 24)
+        ),
+      ]
+    )
+    let visibility = VisibilityMock()
+    let capture = CaptureMock(isActive: false)
+    let boundary = BoundaryMock()
+    var presentationStyle = AlwaysHiddenPresentationStyle.nativeOverflow
+    let engine = makeEngine(
+      inventory: inventory,
+      visibility: visibility,
+      capture: capture,
+      boundary: boundary,
+      alwaysHiddenPresentationStyle: { presentationStyle }
+    )
+    engine.configure(alwaysHiddenEnabled: true, protectCaptureIndicators: false)
+    engine.collapse()
+
+    XCTAssertEqual(
+      visibility.activations.last?.bundles,
+      ["always.app", "own.app", "visible.app"]
+    )
+    XCTAssertEqual(boundary.mode, .nativeOverflow)
+
+    presentationStyle = .customControl
+    engine.invalidateLayout()
+    engine.reapplyCurrentPresentation()
+
+    XCTAssertEqual(visibility.activations.last?.bundles, ["own.app", "visible.app"])
+    XCTAssertEqual(boundary.mode, .disabled)
+  }
+
   func testCollapsedAndExpandedControlsUseRequestedChevronDirections() {
     XCTAssertEqual(
       MenuBarControlAppearance.chevronSymbol(isExpanded: false),
@@ -242,6 +355,9 @@ final class NativeMenuBarEngineTests: XCTestCase {
     visibility: VisibilityMock,
     capture: CaptureMock,
     boundary: BoundaryMock,
+    alwaysHiddenPresentationStyle: @escaping () -> AlwaysHiddenPresentationStyle = {
+      .nativeOverflow
+    },
     isSupportedApplicationLocation: Bool = true
   ) -> NativeMenuBarEngine {
     let display = MenuBarDisplay(
@@ -256,6 +372,7 @@ final class NativeMenuBarEngineTests: XCTestCase {
       ownBundleIdentifier: "own.app",
       displays: { [display] },
       isLeftToRight: { true },
+      alwaysHiddenPresentationStyle: alwaysHiddenPresentationStyle,
       isSupportedOperatingSystem: { true },
       isSupportedApplicationLocation: { isSupportedApplicationLocation }
     )

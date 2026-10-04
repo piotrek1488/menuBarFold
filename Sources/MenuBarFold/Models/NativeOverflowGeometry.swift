@@ -1,5 +1,19 @@
 import CoreGraphics
 
+enum AlwaysHiddenPresentationStyle: Equatable {
+  case nativeOverflow
+  case customControl
+
+  static func resolve(displays: [NativeOverflowGeometry.Display]) -> Self {
+    guard !displays.isEmpty,
+      displays.allSatisfy({ $0.statusAreaWidth < $0.width })
+    else {
+      return .customControl
+    }
+    return .nativeOverflow
+  }
+}
+
 /// Sizes multiple status items below macOS 27's per-item discard threshold.
 /// Their combined width moves items left of the boundary into the native `«` menu.
 enum NativeOverflowGeometry {
