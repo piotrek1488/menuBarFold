@@ -211,6 +211,32 @@ final class NativeMenuBarEngineTests: XCTestCase {
     XCTAssertTrue(separator.isTemplate)
   }
 
+  func testEnvironmentReapplyIsNeededForCollapsedAndExpandedAlwaysHiddenModes() {
+    let inventory = InventoryMock(isAuthorized: true, items: [])
+    let visibility = VisibilityMock()
+    let capture = CaptureMock(isActive: false)
+    let boundary = BoundaryMock()
+    let engine = makeEngine(
+      inventory: inventory,
+      visibility: visibility,
+      capture: capture,
+      boundary: boundary
+    )
+
+    engine.arrange()
+    XCTAssertFalse(engine.requiresEnvironmentReapply)
+
+    engine.expand()
+    XCTAssertFalse(engine.requiresEnvironmentReapply)
+
+    engine.configure(alwaysHiddenEnabled: true, protectCaptureIndicators: false)
+    engine.expand()
+    XCTAssertTrue(engine.requiresEnvironmentReapply)
+
+    engine.collapse()
+    XCTAssertTrue(engine.requiresEnvironmentReapply)
+  }
+
   private func makeEngine(
     inventory: InventoryMock,
     visibility: VisibilityMock,

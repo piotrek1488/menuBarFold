@@ -16,8 +16,9 @@ enum NativeOverflowGeometry {
   static let minimumUnit: CGFloat = 200
   static let cliffMargin: CGFloat = 64
   static let notchedCliffFactor: CGFloat = 0.75
-  /// A fixed count keeps stable autosave names and supports wide multi-display layouts.
-  static let spacerCount = 6
+  /// A fixed count keeps stable autosave names. Twelve segments cover wide external
+  /// displays while each segment stays below the discard cliff of a notched MacBook.
+  static let spacerCount = 12
 
   static func safeLength(for display: Display) -> CGFloat {
     if display.statusAreaWidth < display.width {
@@ -42,5 +43,9 @@ enum NativeOverflowGeometry {
 
     let needed = Int((widestStatusArea / unitLength).rounded(.up)) - 1
     return min(max(needed, 0), spacerCount)
+  }
+
+  static func coveredWidth(unitLength: CGFloat, activeSpacerCount: Int) -> CGFloat {
+    unitLength * CGFloat(activeSpacerCount + 1)
   }
 }

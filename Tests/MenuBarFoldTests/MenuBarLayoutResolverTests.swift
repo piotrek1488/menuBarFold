@@ -117,6 +117,83 @@ final class MenuBarLayoutResolverTests: XCTestCase {
     XCTAssertNil(layout)
   }
 
+  func testResolvesVerticallyStackedNotchedAndExternalDisplays() throws {
+    let builtIn = MenuBarDisplay(
+      identifier: "built-in",
+      appKitFrame: CGRect(x: 0, y: 0, width: 1_710, height: 1_112),
+      accessibilityFrame: CGRect(x: 0, y: 0, width: 1_710, height: 1_112)
+    )
+    let leftExternal = MenuBarDisplay(
+      identifier: "left",
+      appKitFrame: CGRect(x: -1_682, y: 1_112, width: 2_560, height: 1_440),
+      accessibilityFrame: CGRect(x: -1_682, y: -1_440, width: 2_560, height: 1_440)
+    )
+    let rightExternal = MenuBarDisplay(
+      identifier: "right",
+      appKitFrame: CGRect(x: 878, y: 1_112, width: 2_560, height: 1_440),
+      accessibilityFrame: CGRect(x: 878, y: -1_440, width: 2_560, height: 1_440)
+    )
+    let inventory = [
+      MenuBarInventoryItem(
+        bundleIdentifier: "visible.everywhere",
+        frame: frame(atX: 3_380, y: -1_440)
+      ),
+      MenuBarInventoryItem(
+        bundleIdentifier: "hidden.everywhere",
+        frame: frame(atX: 3_080, y: -1_440)
+      ),
+      MenuBarInventoryItem(
+        bundleIdentifier: "visible.somewhere",
+        frame: frame(atX: 1_480, y: 0)
+      ),
+      MenuBarInventoryItem(
+        bundleIdentifier: "visible.somewhere",
+        frame: frame(atX: 3_080, y: -1_440)
+      ),
+    ]
+
+    let layout = try XCTUnwrap(
+      MenuBarLayoutResolver.resolve(
+        inventory: inventory,
+        boundaryFrame: frame(atX: 1_410, y: 1_080),
+        alwaysHiddenBoundaryFrame: nil,
+        displays: [builtIn, leftExternal, rightExternal],
+        isLeftToRight: true,
+        excludingBundle: nil
+      )
+    )
+
+    XCTAssertEqual(layout.sections["visible.everywhere"], .visible)
+    XCTAssertEqual(layout.sections["hidden.everywhere"], .hidden)
+    XCTAssertEqual(layout.sections["visible.somewhere"], .visible)
+  }
+
+  func testAccessibilityCoordinatesAreAnchoredToPrimaryDisplayTop() {
+    let primary = CGRect(x: 0, y: 0, width: 1_710, height: 1_112)
+
+    XCTAssertEqual(
+      MenuBarDisplayInventory.accessibilityFrame(
+        for: primary,
+        primaryFrame: primary
+      ),
+      CGRect(x: 0, y: 0, width: 1_710, height: 1_112)
+    )
+    XCTAssertEqual(
+      MenuBarDisplayInventory.accessibilityFrame(
+        for: CGRect(x: 878, y: 1_112, width: 2_560, height: 1_440),
+        primaryFrame: primary
+      ),
+      CGRect(x: 878, y: -1_440, width: 2_560, height: 1_440)
+    )
+    XCTAssertEqual(
+      MenuBarDisplayInventory.accessibilityFrame(
+        for: CGRect(x: -1_000, y: -900, width: 1_000, height: 900),
+        primaryFrame: primary
+      ),
+      CGRect(x: -1_000, y: 1_112, width: 1_000, height: 900)
+    )
+  }
+
   private func frame(atX x: CGFloat, y: CGFloat = 0) -> CGRect {
     CGRect(x: x - 10, y: y, width: 20, height: 24)
   }

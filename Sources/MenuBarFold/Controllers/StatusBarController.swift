@@ -1,5 +1,6 @@
 import AppKit
 import Foundation
+import OSLog
 
 enum MenuBarControlAppearance {
   static func chevronSymbol(isExpanded: Bool) -> String {
@@ -20,6 +21,11 @@ enum MenuBarControlAppearance {
 
 @MainActor
 final class StatusBarController: NSObject, MenuBarBoundaryProviding {
+  private static let logger = Logger(
+    subsystem: Bundle.main.bundleIdentifier ?? "io.github.menubarfold.MenuBarFold",
+    category: "MenuBar"
+  )
+
   private let model: AppModel
   private let engine: NativeMenuBarEngine
   private let launchAtLoginService: LaunchAtLoginServicing
@@ -344,6 +350,19 @@ final class StatusBarController: NSObject, MenuBarBoundaryProviding {
         unitLength: unitLength,
         displays: displays
       )
+      let coveredWidth = NativeOverflowGeometry.coveredWidth(
+        unitLength: unitLength,
+        activeSpacerCount: activeSpacerCount
+      )
+
+      Self.logger.info(
+        "Native overflow: displays=\(displays.count, privacy: .public), unit=\(unitLength, privacy: .public), spacers=\(activeSpacerCount, privacy: .public), coverage=\(coveredWidth, privacy: .public)"
+      )
+      for (index, display) in displays.enumerated() {
+        Self.logger.info(
+          "Overflow display \(index, privacy: .public): width=\(display.width, privacy: .public), statusArea=\(display.statusAreaWidth, privacy: .public)"
+        )
+      }
 
       button.image = nil
       button.toolTip = nil
@@ -541,12 +560,16 @@ final class StatusBarController: NSObject, MenuBarBoundaryProviding {
 
   @objc
   private func environmentChanged() {
-    let shouldReapplyRestriction = engine.requiresVisibilityAssertion
+    let shouldReapply = engine.requiresEnvironmentReapply
+    Self.logger.info(
+      "Menu bar environment changed; fresh layout reapply=\(shouldReapply, privacy: .public)"
+    )
     environmentReapplyWorkItem?.cancel()
     engine.invalidateLayout()
 
-    guard shouldReapplyRestriction else { return }
+    guard shouldReapply else { return }
     let workItem = DispatchWorkItem { [weak self] in
+      Self.logger.info("Reapplying menu bar layout after environment settled")
       self?.engine.reapplyCurrentPresentation()
     }
     environmentReapplyWorkItem = workItem

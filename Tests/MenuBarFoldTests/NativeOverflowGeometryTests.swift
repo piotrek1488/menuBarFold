@@ -51,6 +51,52 @@ final class NativeOverflowGeometryTests: XCTestCase {
     )
   }
 
+  func testNotchedMacBookCanDriveOverflowOnWideExternalDisplay() {
+    let displays = [
+      Display(width: 1_512, statusAreaWidth: 663.5),
+      Display(width: 3_840),
+    ]
+    let unitLength = NativeOverflowGeometry.unitLength(displays: displays)
+    let spacers = NativeOverflowGeometry.activeSpacerCount(
+      unitLength: unitLength,
+      displays: displays
+    )
+
+    XCTAssertEqual(unitLength, 433)
+    XCTAssertEqual(spacers, 8)
+    XCTAssertGreaterThanOrEqual(
+      NativeOverflowGeometry.coveredWidth(
+        unitLength: unitLength,
+        activeSpacerCount: spacers
+      ),
+      3_840
+    )
+    XCTAssertLessThan(unitLength, 663.5 * NativeOverflowGeometry.notchedCliffFactor)
+  }
+
+  func testCurrentThreeDisplayGeometryUsesNotchedScreenForUnitAndExternalForCoverage() {
+    let displays = [
+      Display(width: 1_710, statusAreaWidth: 751),
+      Display(width: 2_560),
+      Display(width: 2_560),
+    ]
+    let unitLength = NativeOverflowGeometry.unitLength(displays: displays)
+    let spacers = NativeOverflowGeometry.activeSpacerCount(
+      unitLength: unitLength,
+      displays: displays
+    )
+
+    XCTAssertEqual(unitLength, 499)
+    XCTAssertEqual(spacers, 5)
+    XCTAssertGreaterThanOrEqual(
+      NativeOverflowGeometry.coveredWidth(
+        unitLength: unitLength,
+        activeSpacerCount: spacers
+      ),
+      2_560
+    )
+  }
+
   func testGeometryUsesSafeFallbacksAndCapsSpacerCount() {
     XCTAssertEqual(NativeOverflowGeometry.unitLength(displays: []), 200)
     XCTAssertEqual(

@@ -11,18 +11,16 @@ protocol MenuBarInventoryProviding: AnyObject {
 enum MenuBarDisplayInventory {
   static func current() -> [MenuBarDisplay] {
     let screens = NSScreen.screens
-    guard let desktopTop = screens.map(\.frame.maxY).max() else { return [] }
+    guard let primaryFrame = screens.first?.frame else { return [] }
 
     return screens.enumerated().map { index, screen in
       let screenNumber =
         screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber
       let identifier = screenNumber.map { String($0.uint32Value) } ?? "screen-\(index)"
       let frame = screen.frame
-      let accessibilityFrame = CGRect(
-        x: frame.minX,
-        y: desktopTop - frame.maxY,
-        width: frame.width,
-        height: frame.height
+      let accessibilityFrame = accessibilityFrame(
+        for: frame,
+        primaryFrame: primaryFrame
       )
 
       return MenuBarDisplay(
@@ -31,6 +29,17 @@ enum MenuBarDisplayInventory {
         accessibilityFrame: accessibilityFrame
       )
     }
+  }
+
+  /// Accessibility uses a top-left origin anchored to the primary display.
+  /// AppKit uses a bottom-left origin anchored to that same display.
+  static func accessibilityFrame(for appKitFrame: CGRect, primaryFrame: CGRect) -> CGRect {
+    CGRect(
+      x: appKitFrame.minX,
+      y: primaryFrame.maxY - appKitFrame.maxY,
+      width: appKitFrame.width,
+      height: appKitFrame.height
+    )
   }
 }
 

@@ -40,6 +40,7 @@ The Objective-C bridge uses runtime class and selector lookup. There is no link-
 - **Generation tokens:** stale Accessibility scans and late private-framework callbacks cannot overwrite a newer user action.
 - **No uncertain geometry:** an item outside known display coordinates invalidates the whole snapshot.
 - **Per-display projection:** boundary positions are projected by their distance from each display's visible menu bar edge.
+- **Primary-display coordinate anchor:** Accessibility frames use a top-left origin anchored to the primary display, so monitors placed above it have negative `y` coordinates and monitors below it have positive `y` coordinates. The AppKit-to-Accessibility conversion preserves that layout instead of normalizing the whole desktop.
 - **Bounded native overflow:** no spacer reaches macOS 27's per-display status-item discard threshold; several bounded items provide the required width across notched and external displays.
 - **Environment refresh:** display, wake, app launch, and app termination changes release stale state before a fresh scan.
 - **Capture protection:** a microphone or camera in use releases the assertion so macOS's wide privacy capsule remains available.

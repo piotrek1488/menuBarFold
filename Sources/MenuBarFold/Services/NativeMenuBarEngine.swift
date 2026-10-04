@@ -103,6 +103,10 @@ final class NativeMenuBarEngine {
     presentation == .collapsed
   }
 
+  var requiresEnvironmentReapply: Bool {
+    presentation == .collapsed || (presentation == .expanded && alwaysHiddenEnabled)
+  }
+
   var isNativeMechanismAvailable: Bool {
     isSupportedOperatingSystem() && visibility.isAvailable
   }
@@ -290,6 +294,16 @@ final class NativeMenuBarEngine {
       return
     }
 
+    let displaySnapshot = displays()
+    Self.logger.info(
+      "Reading menu bar layout: \(displaySnapshot.count, privacy: .public) display(s), toggle=\(String(describing: boundaryFrame), privacy: .public), alwaysHidden=\(String(describing: alwaysHiddenBoundaryFrame), privacy: .public)"
+    )
+    for display in displaySnapshot {
+      Self.logger.info(
+        "Display \(display.identifier, privacy: .public): AppKit=\(String(describing: display.appKitFrame), privacy: .public), AX=\(String(describing: display.accessibilityFrame), privacy: .public)"
+      )
+    }
+
     inventory.snapshot { [weak self] inventoryItems in
       guard let self, requestGeneration == self.generation else { return }
 
@@ -298,11 +312,14 @@ final class NativeMenuBarEngine {
           inventory: inventoryItems,
           boundaryFrame: boundaryFrame,
           alwaysHiddenBoundaryFrame: alwaysHiddenBoundaryFrame,
-          displays: self.displays(),
+          displays: displaySnapshot,
           isLeftToRight: self.isLeftToRight(),
           excludingBundle: self.ownBundleIdentifier
         )
       else {
+        Self.logger.error(
+          "Menu bar layout is incomplete for \(displaySnapshot.count, privacy: .public) display(s) and \(inventoryItems.count, privacy: .public) status item(s); failing open"
+        )
         self.releaseAssertion()
         self.showArrangementBoundaryIfNeeded()
         self.publish(
@@ -313,6 +330,9 @@ final class NativeMenuBarEngine {
       }
 
       self.cachedLayout = layout
+      Self.logger.info(
+        "Resolved menu bar layout: visible=\(layout.bundles(in: [.visible]).count, privacy: .public), hidden=\(layout.bundles(in: [.hidden]).count, privacy: .public), alwaysHidden=\(layout.bundles(in: [.alwaysHidden]).count, privacy: .public)"
+      )
       self.apply(layout, for: target)
     }
   }
@@ -404,6 +424,9 @@ final class NativeMenuBarEngine {
         let previousAssertion = self.assertion
         self.assertion = newAssertion
         previousAssertion?.invalidate()
+        Self.logger.info(
+          "Visibility restriction active: allowedBundles=\(allowedWithSelf.count, privacy: .public), hiddenBundles=\(hiddenCount, privacy: .public)"
+        )
         self.showNativeOverflowIfNeeded(alwaysHiddenCount: alwaysHiddenCount)
         self.publish(
           status: resultingStatus,
@@ -412,6 +435,9 @@ final class NativeMenuBarEngine {
           error: nil
         )
       case .failure(let error):
+        Self.logger.error(
+          "Visibility activation failed: \(error.localizedDescription, privacy: .public)"
+        )
         self.releaseAssertion()
         self.showArrangementBoundaryIfNeeded()
         self.publish(
