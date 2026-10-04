@@ -11,12 +11,15 @@ The app is written in Swift, SwiftUI, and AppKit. English is the default languag
 1. Download the latest `MenuBarFold-<version>.dmg` from [GitHub Releases](../../releases/latest).
 2. Open the DMG and drag **MenuBarFold** to the **Applications** shortcut.
 3. Launch `/Applications/MenuBarFold.app`.
-4. Grant access in **System Settings → Privacy & Security → Accessibility**.
-5. Choose **Arrange Icons** and set up the three menu bar zones.
+4. macOS will block the first launch because the free build is not notarized. Leave the alert, open **System Settings → Privacy & Security**, scroll to **Security**, choose **Open Anyway**, then confirm **Open**.
+5. Grant access in **System Settings → Privacy & Security → Accessibility**.
+6. Choose **Arrange Icons** and set up the three menu bar zones.
 
-The release DMG is signed with Developer ID, notarized by Apple, and accompanied by a SHA-256 checksum. MenuBarFold must remain in the system `/Applications` folder; icon filtering is intentionally disabled for copies launched elsewhere.
+The release DMG is ad-hoc signed, is **not notarized by Apple**, and is accompanied by a SHA-256 checksum. Only approve it if you trust this repository and the checksum matches. Do not disable Gatekeeper globally. Apple documents **Open Anyway** as the per-app exception for software from an unidentified developer.
 
-A DMG is used instead of a PKG because MenuBarFold is one self-contained application. Both formats require notarization, while a PKG would add a separate Developer ID Installer certificate without improving this installation flow. See the [release guide](docs/RELEASING.md) for the rationale and credentials.
+A free build cannot provide Apple-verified developer identity or malware scanning. Ad-hoc signing identifies only that exact build, so a later update can require **Open Anyway** and Accessibility approval again. For personal use, building locally with the same installed development identity is more stable; without one, the local script also falls back to ad-hoc signing.
+
+MenuBarFold must remain in the system `/Applications` folder; icon filtering is intentionally disabled for copies launched elsewhere. A DMG is used instead of a PKG because both formats have the same paid Developer ID requirement for a trusted installation, while PKG would add another Installer certificate without improving this single-app flow. See the [release guide](docs/RELEASING.md).
 
 ## Current menu bar behavior
 
@@ -69,7 +72,9 @@ The visibility service is private and is unavailable to App Store sandboxed apps
 - Accessibility permission.
 - Installation in the system `/Applications` folder.
 - Direct distribution outside the Mac App Store, without App Sandbox.
-- A stable signature. Public releases use Developer ID; local builds prefer an installed development certificate and otherwise fall back to an ad-hoc signature.
+- Manual Gatekeeper approval for the free GitHub release.
+- Accessibility may need to be granted again after an ad-hoc-signed update.
+- Local builds prefer an installed development certificate and otherwise fall back to an ad-hoc signature.
 
 The source remains buildable against macOS 14+ for ordinary CI checks, while release builds are produced on the GitHub `xcode-27` runner and declare macOS 27 as their minimum runtime.
 
@@ -98,17 +103,16 @@ The About screen reads its version from `CFBundleShortVersionString`, so the dis
 
 ## Publish a DMG release
 
-The repository contains [a release workflow](.github/workflows/release.yml) that:
+The repository contains a no-cost [release workflow](.github/workflows/release.yml) that:
 
 1. checks out an existing `vMAJOR.MINOR.PATCH` tag;
 2. runs all tests on the `xcode-27` runner;
-3. imports a Developer ID Application certificate from GitHub Actions secrets;
-4. builds a universal `arm64 + x86_64` application with Hardened Runtime;
-5. creates, signs, notarizes, and staples a DMG;
-6. generates its SHA-256 checksum;
-7. creates a GitHub Release and attaches both files.
+3. builds a native `arm64` application with Hardened Runtime;
+4. applies an ad-hoc signature and creates the DMG;
+5. verifies the bundle, architectures, signature integrity, and SHA-256 checksum;
+6. creates a GitHub Release with a clear unnotarized-build warning and attaches both files.
 
-After completing the one-time certificate and secret setup from the [release guide](docs/RELEASING.md), publish a version with:
+No Apple account, paid membership, certificate, or GitHub secret is required. Publish a version with:
 
 ```sh
 git tag -a v0.2.0 -m "MenuBarFold 0.2.0"
@@ -116,6 +120,10 @@ git push origin v0.2.0
 ```
 
 The workflow can also be rerun manually from **Actions → Release DMG** for an existing tag.
+
+An optional Developer ID/notarization mode remains in the packaging script for the future, but the default GitHub flow does not use it.
+
+The release is intentionally Apple-silicon-only. macOS 27 supports Apple silicon Macs, and Xcode 27 deprecates `x86_64` for a macOS 27 deployment target.
 
 ## Important macOS 27 limitations
 
@@ -126,6 +134,7 @@ The workflow can also be rerun manually from **Actions → Release DMG** for an 
 - macOS still owns the final menu bar order. MenuBarFold does not re-register its controls while folding, but it cannot prevent the system or another app from recreating or moving an item after a restart or display change.
 - The system `«` may still appear naturally when macOS runs out of space; MenuBarFold neither positions nor controls it.
 - A future macOS update can change or remove the private visibility service.
+- Free GitHub builds have no stable cryptographic identity across versions. macOS can therefore ask for **Open Anyway** and Accessibility permission again after an update.
 
 MenuBarFold releases its restriction while a microphone or camera is active so the system privacy capsule remains visible. macOS does not provide a public API for detecting another application's screen recording, so the wider screen-recording capsule cannot receive the same protection.
 

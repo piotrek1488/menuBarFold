@@ -9,12 +9,15 @@ Aplikacja jest napisana w Swift, SwiftUI i AppKit. Domyślnym językiem jest ang
 1. Pobierz najnowszy plik `MenuBarFold-<wersja>.dmg` z [GitHub Releases](../../../releases/latest).
 2. Otwórz DMG i przeciągnij **MenuBarFold** na skrót **Applications**.
 3. Uruchom `/Applications/MenuBarFold.app`.
-4. Przyznaj dostęp w **Ustawienia systemowe → Prywatność i bezpieczeństwo → Dostępność**.
-5. Wybierz **Ułóż ikony** i ustaw trzy strefy paska menu.
+4. macOS zablokuje pierwsze uruchomienie, bo darmowy build nie jest notaryzowany. Zamknij komunikat, otwórz **Ustawienia systemowe → Prywatność i bezpieczeństwo**, przewiń do sekcji **Bezpieczeństwo**, wybierz **Otwórz mimo to**, a potem potwierdź **Otwórz**.
+5. Przyznaj dostęp w **Ustawienia systemowe → Prywatność i bezpieczeństwo → Dostępność**.
+6. Wybierz **Ułóż ikony** i ustaw trzy strefy paska menu.
 
-Publiczny DMG jest podpisany certyfikatem Developer ID, sprawdzony przez usługę notaryzacji Apple i ma dołączoną sumę SHA-256. Aplikacja musi pozostać w systemowym katalogu `/Applications`; kopia uruchomiona z innego miejsca celowo nie włączy filtrowania ikon.
+DMG jest podpisany ad-hoc, **nie jest notaryzowany przez Apple** i ma dołączoną sumę SHA-256. Zatwierdź go tylko wtedy, gdy ufasz temu repozytorium i suma się zgadza. Nie wyłączaj Gatekeepera globalnie. Apple opisuje **Otwórz mimo to** jako wyjątek tylko dla konkretnej aplikacji.
 
-Używamy DMG zamiast instalatora PKG, ponieważ MenuBarFold jest jedną samodzielną aplikacją. Oba formaty wymagają notaryzacji, a PKG dołożyłby osobny certyfikat Developer ID Installer bez poprawy tego sposobu instalacji. Szczegóły są w [instrukcji wydania](RELEASING.pl.md).
+Darmowy build nie ma tożsamości dewelopera zweryfikowanej przez Apple ani skanowania usługi notaryzacji. Podpis ad-hoc rozpoznaje tylko konkretny build, dlatego aktualizacja może ponownie wymagać **Otwórz mimo to** oraz przyznania Accessibility. Do własnego użytku stabilniejsze jest lokalne budowanie tym samym zainstalowanym certyfikatem deweloperskim; bez niego lokalny skrypt również użyje podpisu ad-hoc.
+
+Aplikacja musi pozostać w systemowym katalogu `/Applications`; kopia uruchomiona z innego miejsca celowo nie włączy filtrowania ikon. Używamy DMG zamiast PKG, ponieważ oba formaty mają ten sam płatny wymóg Developer ID dla zaufanej instalacji, a PKG dołożyłby jeszcze certyfikat Installer. Szczegóły są w [instrukcji wydania](RELEASING.pl.md).
 
 ## Obecne działanie paska
 
@@ -67,7 +70,9 @@ Ten mechanizm jest prywatny i nie działa w aplikacji z sandboxem App Store. Men
 - Przyznane uprawnienie Accessibility.
 - Instalacja w systemowym katalogu `/Applications`.
 - Dystrybucja bezpośrednia poza Mac App Store i bez App Sandbox.
-- Stały podpis aplikacji. Wydania używają Developer ID; lokalny build wybiera dostępny certyfikat deweloperski, a w ostateczności podpis tymczasowy.
+- Ręczne zatwierdzenie darmowego wydania w Gatekeeperze.
+- Możliwe ponowne przyznanie Accessibility po aktualizacji podpisanej ad-hoc.
+- Lokalny build wybiera dostępny certyfikat deweloperski, a w ostateczności podpis ad-hoc.
 
 Kod można kompilować na macOS 14+ w zwykłym CI. Publiczne wydanie powstaje na runnerze GitHub `xcode-27` i deklaruje macOS 27 jako minimalną wersję systemu.
 
@@ -96,17 +101,16 @@ Ekran „O aplikacji” odczytuje wersję z `CFBundleShortVersionString`, więc 
 
 ## Publikowanie wydania DMG
 
-Repozytorium zawiera [workflow wydania](../.github/workflows/release.yml), który:
+Repozytorium zawiera bezpłatny [workflow wydania](../.github/workflows/release.yml), który:
 
 1. pobiera istniejący tag `vMAJOR.MINOR.PATCH`;
 2. uruchamia testy na runnerze `xcode-27`;
-3. importuje certyfikat Developer ID Application z sekretów GitHub Actions;
-4. buduje uniwersalną aplikację `arm64 + x86_64` z Hardened Runtime;
-5. tworzy, podpisuje, notaryzuje i stapluje DMG;
-6. generuje sumę SHA-256;
-7. tworzy GitHub Release i dodaje oba pliki.
+3. buduje natywną aplikację `arm64` z Hardened Runtime;
+4. podpisuje ją ad-hoc i tworzy DMG;
+5. sprawdza pakiet, architektury, integralność podpisu i sumę SHA-256;
+6. tworzy GitHub Release z ostrzeżeniem o braku notaryzacji i dodaje oba pliki.
 
-Po jednorazowej konfiguracji certyfikatu i sekretów opisanej w [instrukcji wydania](RELEASING.pl.md) nową wersję publikuje się tak:
+Nie potrzeba konta Apple, płatnego programu, certyfikatu ani sekretów GitHuba. Nową wersję publikuje się tak:
 
 ```sh
 git tag -a v0.2.0 -m "MenuBarFold 0.2.0"
@@ -114,6 +118,10 @@ git push origin v0.2.0
 ```
 
 Workflow można również uruchomić ponownie ręcznie dla istniejącego taga przez **Actions → Release DMG**.
+
+Skrypt pakowania zachowuje opcjonalny tryb Developer ID i notaryzacji na przyszłość, ale domyślny workflow GitHuba go nie używa.
+
+Wydanie jest celowo przeznaczone tylko dla Apple Silicon. macOS 27 obsługuje Maki z Apple Silicon, a Xcode 27 oznacza `x86_64` jako przestarzałe dla targetu macOS 27.
 
 ## Ograniczenia macOS 27
 
@@ -124,6 +132,7 @@ Workflow można również uruchomić ponownie ręcznie dla istniejącego taga pr
 - Ostateczną kolejnością nadal zarządza macOS. MenuBarFold nie rejestruje ponownie swoich kontrolek podczas zwijania, ale nie może zabronić systemowi lub innej aplikacji odtworzenia albo przesunięcia ikony po restarcie czy zmianie ekranów.
 - Systemowy przycisk `«` może pojawić się naturalnie, gdy macOS zabraknie miejsca. MenuBarFold go nie ustawia i nim nie steruje.
 - Przyszła aktualizacja macOS może zmienić albo usunąć prywatny mechanizm widoczności.
+- Darmowe wydania z GitHuba nie mają stałej tożsamości kryptograficznej między wersjami. Po aktualizacji macOS może ponownie poprosić o **Otwórz mimo to** i Accessibility.
 
 Podczas użycia mikrofonu lub kamery MenuBarFold zwalnia ograniczenie, aby zachować systemowy wskaźnik prywatności. macOS nie udostępnia publicznego API do wykrywania nagrywania ekranu przez inną aplikację, więc szeroki wskaźnik nagrywania nie może korzystać z tej samej ochrony.
 

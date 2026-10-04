@@ -2,104 +2,63 @@
 
 > [Polska wersja instrukcji](RELEASING.pl.md)
 
-MenuBarFold is distributed directly as a notarized DMG. A public release must use a **Developer ID Application** certificate, Hardened Runtime, a secure timestamp, Apple notarization, and a stapled ticket. An Apple Development or ad-hoc signature is sufficient only for local development.
+MenuBarFold uses a no-cost GitHub release flow. It builds an ad-hoc-signed DMG and does not require an Apple account, Apple Developer Program membership, signing secrets, or notarization credentials.
 
-The automated path is `.github/workflows/release.yml`. It runs on GitHub's `xcode-27` macOS runner and publishes a universal `arm64 + x86_64` disk image to GitHub Releases.
+This trade-off must stay explicit: Apple does not verify the developer identity or scan this artifact through the notary service. Gatekeeper blocks its first launch until the user creates a per-app **Open Anyway** exception. Never tell users that this free artifact is notarized or Apple-verified.
 
 ## Why DMG instead of PKG
 
-Both formats need Developer ID signing and Apple notarization for a normal Gatekeeper experience. A flat installer package would additionally require a **Developer ID Installer** certificate, while the application inside it would still need its **Developer ID Application** signature.
+A PKG does not avoid the paid Apple requirement. A trusted DMG needs a **Developer ID Application** certificate; a trusted PKG additionally needs **Developer ID Installer**, while its contained app still needs **Developer ID Application**.
 
-Apple recommends installer packages when a product has several components, must place files in several fixed locations, or needs custom installation code. MenuBarFold is one self-contained app copied to `/Applications`, so a drag-and-drop DMG has fewer credentials and moving parts, does not need an installer UI, and is easier to remove. If the product later gains a privileged helper or files outside its app bundle, reconsider a PKG at that point.
+Apple recommends an installer package when software has several components, writes to several fixed locations, or runs custom installation code. MenuBarFold is one self-contained app copied to `/Applications`, so a drag-and-drop DMG is simpler to install and remove.
 
-The GitHub workflow authenticates notarization with a team App Store Connect API key. A regular Apple Account by itself is not enough: the Developer ID certificate is available through Apple Developer Program membership, and the notary credentials must belong to that developer team.
+## What the free workflow produces
 
-## What the release workflow produces
-
-For a tag such as `v0.2.0`, a successful workflow publishes:
+For a tag such as `v0.2.0`, `.github/workflows/release.yml` publishes:
 
 ```text
 MenuBarFold-0.2.0.dmg
 MenuBarFold-0.2.0.dmg.sha256
 ```
 
-The version without the leading `v` becomes `CFBundleShortVersionString`. The GitHub Actions run number becomes the numeric `CFBundleVersion`. The About screen reads the version directly from the built bundle.
+The tag without `v` becomes `CFBundleShortVersionString`; the GitHub Actions run number becomes `CFBundleVersion`. The DMG contains:
 
-The DMG contains:
-
-- a release build of `MenuBarFold.app`;
-- both `arm64` and `x86_64` slices;
+- `MenuBarFold.app` and an `/Applications` shortcut;
+- a native `arm64` executable for Apple silicon;
 - the stable bundle identifier `io.github.menubarfold.MenuBarFold`;
-- an `Applications` shortcut for drag-and-drop installation;
-- a Developer ID signature with Hardened Runtime and timestamp;
-- an Apple notarization ticket stapled to the disk image.
+- Hardened Runtime and an ad-hoc code signature;
+- no Developer ID certificate and no notarization ticket.
 
-Do not change the bundle identifier after publishing the first release. Accessibility authorization and macOS trust are tied to the application's identity and signature.
+The checksum detects an incomplete or changed download when compared with the release checksum. It is not an independent proof of publisher identity because both files come from the same GitHub Release.
 
-## One-time Apple setup
+## Cost and permission trade-offs
 
-### 1. Create a Developer ID Application certificate
+An ad-hoc signature identifies exactly one build. A new version changes its code-directory hash, so macOS can treat it as a new application for security decisions. Users should expect that an update may require:
 
-Join the Apple Developer Program and create a [Developer ID Application certificate](https://developer.apple.com/help/account/certificates/create-developer-id-certificates). The certificate must be present in Keychain Access together with its private key.
+1. **Open Anyway** again;
+2. removing the previous MenuBarFold entry from Accessibility;
+3. adding or enabling the new `/Applications/MenuBarFold.app` entry.
 
-Export it from **Keychain Access → My Certificates** as a password-protected `.p12` file. Export the certificate and private key together.
+For the maintainer's own Mac, `./script/build_and_run.sh --verify` is preferable. It uses the first installed local code-signing identity, such as an Apple Development certificate, and keeps using that identity while it remains available. This is not a trusted public distribution signature.
 
-This workflow does not need a provisioning profile because MenuBarFold is a directly distributed macOS application with no private entitlements. App Sandbox must remain disabled.
+Do not work around these limitations by disabling Gatekeeper globally. The documented path creates an exception only for MenuBarFold.
 
-### 2. Create a team App Store Connect API key
+## Repository setup
 
-In **App Store Connect → Users and Access → Integrations → Team Keys**, create a team API key that can use the notary service. Download the `.p8` file immediately; Apple allows it to be downloaded only once.
+The free workflow needs no Apple-related GitHub secrets. It only needs the default `GITHUB_TOKEN` with permission to create releases. The workflow declares:
 
-Use a **team key**, not an individual key. Apple states that individual App Store Connect keys cannot use `notarytool`.
-
-Record:
-
-- the Key ID;
-- the Issuer ID;
-- the complete contents of the downloaded `.p8` file.
-
-### 3. Add GitHub Actions secrets
-
-Open the GitHub repository and go to **Settings → Secrets and variables → Actions → New repository secret**.
-
-Create these six secrets:
-
-| Secret | Value |
-| --- | --- |
-| `BUILD_CERTIFICATE_BASE64` | Base64 representation of the exported Developer ID `.p12` file |
-| `P12_PASSWORD` | Password used while exporting the `.p12` file |
-| `KEYCHAIN_PASSWORD` | A new random password used only for the temporary CI keychain |
-| `APP_STORE_CONNECT_API_KEY_ID` | Team API key ID |
-| `APP_STORE_CONNECT_API_ISSUER_ID` | Team API issuer ID |
-| `APP_STORE_CONNECT_API_KEY_P8` | Complete text of the `.p8` private key |
-
-Create the certificate value on macOS with:
-
-```sh
-base64 -i DeveloperIDApplication.p12 | pbcopy
+```yaml
+permissions:
+  contents: write
 ```
 
-Paste the clipboard into `BUILD_CERTIFICATE_BASE64`. Paste the `.p8` file as text into `APP_STORE_CONNECT_API_KEY_P8`; do not Base64-encode that key.
-
-Never commit the certificate, private key, passwords, or generated secret values. GitHub's certificate-import procedure also recommends encrypted Actions secrets and an isolated temporary keychain.
-
-### 4. Check repository Actions permissions
-
-The workflow declares `contents: write` so it can create a GitHub Release. If an organization policy forces read-only tokens, allow read/write workflow permissions under **Settings → Actions → General → Workflow permissions**.
-
-Optionally protect public releases with a GitHub `release` environment and required reviewers. If you do, add `environment: release` to the `release` job and move the six secrets to that environment.
+If organization policy forces read-only workflow tokens, enable read/write workflow permissions under **Settings → Actions → General → Workflow permissions**.
 
 ## Publish a release
 
-### 1. Prepare the source
+### 1. Validate the source
 
 Before tagging:
-
-1. update `CHANGELOG.md`;
-2. run the full tests;
-3. run the installed application on macOS 27;
-4. verify the regular-hidden and always-hidden flows on a notched display and an external display;
-5. confirm the working tree is clean.
 
 ```sh
 ./script/build_and_run.sh --test
@@ -107,132 +66,107 @@ Before tagging:
 git status --short
 ```
 
+Also test both hidden sections on macOS 27, including a notched display and an external display. Update `CHANGELOG.md` and make sure the working tree is clean.
+
 ### 2. Create and push an annotated tag
 
-Release tags must match `vMAJOR.MINOR.PATCH` exactly:
+The tag must match `vMAJOR.MINOR.PATCH` exactly:
 
 ```sh
 git tag -a v0.2.0 -m "MenuBarFold 0.2.0"
 git push origin v0.2.0
 ```
 
-Pushing the tag starts **Release DMG**. The workflow refuses branch names, lightweight version strings without `v`, and versions containing non-numeric components.
+Pushing the tag starts **Release DMG**. The workflow can also be rerun from **Actions → Release DMG → Run workflow** with an existing tag.
 
 ### 3. Download the result
 
-After the workflow succeeds, open the repository's **Releases** page. The release contains the DMG and checksum. The same files are also retained as a workflow artifact.
+After the job succeeds, GitHub Releases contains the DMG and `.sha256` file. The same files are retained as a workflow artifact named `MenuBarFold-<version>-unnotarized`.
 
-If publishing fails after the draft release is created, fix the cause and use **Actions → Release DMG → Run workflow** with the existing tag. The workflow replaces assets of an existing mutable release and publishes the draft when all steps succeed.
+The release notes include a warning explaining that the build is ad-hoc signed and requires manual approval.
 
 ## What the workflow verifies
 
 The release job:
 
-1. checks that the requested tag exists and matches `vMAJOR.MINOR.PATCH`;
-2. runs the Swift test suite;
-3. imports the `.p12` certificate into a temporary keychain;
-4. confirms that the imported identity is a Developer ID Application certificate;
-5. builds a release application for `arm64` and `x86_64`;
-6. validates both architecture slices with `lipo`;
-7. verifies the application and DMG signatures with `codesign`;
-8. submits the DMG with `xcrun notarytool --wait`;
-9. staples and validates the ticket;
-10. runs a Gatekeeper assessment with `spctl`;
-11. creates the SHA-256 checksum;
-12. uploads the assets and removes the temporary signing material.
+1. validates the tag and checks that it exists;
+2. runs the Swift tests;
+3. builds a Release app for `arm64`;
+4. enables Hardened Runtime;
+5. creates an ad-hoc signature with `codesign -s -`;
+6. validates the `arm64` architecture with `lipo`;
+7. verifies the application and DMG signature integrity with `codesign`;
+8. creates the DMG and SHA-256 checksum;
+9. publishes both files with the unnotarized-build warning.
 
-The job intentionally fails rather than publishing an ad-hoc or Apple Development-signed public artifact.
+This checks build integrity. It does not replace Apple notarization or make Gatekeeper trust the publisher.
 
-## Local packaging check
+## Local packaging
 
-You can test bundle creation and the DMG layout without a Developer ID certificate or notarization:
+The default command follows the free release path:
 
 ```sh
-REQUIRE_DEVELOPER_ID=0 \
-SKIP_NOTARIZATION=1 \
-SWIFT_BUILD_ARCHS=arm64 \
+SWIFT_BUILD_ARCHS="arm64" \
+CODE_SIGN_IDENTITY="-" \
 ./script/package_release.sh 0.2.0
 ```
 
-This produces `dist/MenuBarFold-0.2.0.dmg`, but it is **not a public release**. The script prints a warning and must not upload that image to GitHub Releases.
+The result appears in `dist/`. The script prints a warning that manual Gatekeeper approval is required.
 
-To exercise the complete production script locally, install a Developer ID identity and provide a team API key:
+macOS 27 runs on Apple silicon Macs. Xcode 27 deprecates `x86_64` when the minimum deployment target is macOS 27, so the release does not include an unused Intel slice.
+
+## Installation of a downloaded release
+
+1. Optionally verify the checksum in the folder containing both downloads:
+
+   ```sh
+   shasum -a 256 -c MenuBarFold-0.2.0.dmg.sha256
+   ```
+
+2. Open the DMG and drag MenuBarFold to Applications.
+3. Try to open `/Applications/MenuBarFold.app`; macOS blocks it.
+4. Close the warning rather than moving the app to Trash.
+5. Open **System Settings → Privacy & Security**, scroll to **Security**, and click **Open Anyway** for MenuBarFold.
+6. Confirm **Open**, then grant Accessibility access.
+
+Do not use `spctl --master-disable`, and do not advise users to disable Gatekeeper for the whole Mac.
+
+## Functional release checklist
+
+- checksum verification succeeds;
+- the DMG contains MenuBarFold and an Applications shortcut;
+- the release notes clearly say the build is unnotarized;
+- **Open Anyway** launches the installed copy;
+- first-run Accessibility onboarding works;
+- the folded state shows one main `<` control;
+- the main control reveals regular hidden icons, `|`, and the second `<`;
+- the second control reveals and hides always-hidden icons without moving;
+- repeated folding preserves the Command-dragged order;
+- notched and non-notched displays behave consistently;
+- auto fold, hover reveal, shortcut, and launch at login work;
+- English and Polish layouts fit;
+- revoking Accessibility fails open and shows the full menu bar.
+
+## Optional trusted release in the future
+
+The packaging script retains a strict Developer ID mode. It requires paid Apple Developer Program access, a **Developer ID Application** identity, and team notarization credentials:
 
 ```sh
+export CODE_SIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)"
+export REQUIRE_DEVELOPER_ID=1
+export SKIP_NOTARIZATION=0
 export NOTARYTOOL_KEY="/secure/path/AuthKey_KEYID.p8"
 export NOTARYTOOL_KEY_ID="KEYID"
 export NOTARYTOOL_ISSUER_ID="ISSUER-UUID"
 ./script/package_release.sh 0.2.0
 ```
 
-## Manual validation of a downloaded release
-
-```sh
-shasum -a 256 -c MenuBarFold-0.2.0.dmg.sha256
-diskutil image info MenuBarFold-0.2.0.dmg
-xcrun stapler validate MenuBarFold-0.2.0.dmg
-spctl --assess --type open \
-  --context context:primary-signature \
-  --verbose=4 \
-  MenuBarFold-0.2.0.dmg
-```
-
-After mounting the image, also inspect the application:
-
-```sh
-codesign --verify --deep --strict --verbose=2 \
-  "/Volumes/MenuBarFold 0.2.0/MenuBarFold.app"
-codesign -dvvv "/Volumes/MenuBarFold 0.2.0/MenuBarFold.app"
-lipo -archs "/Volumes/MenuBarFold 0.2.0/MenuBarFold.app/Contents/MacOS/MenuBarFold"
-```
-
-Expected architectures are `arm64 x86_64`, and the signing authority must start with `Developer ID Application:`.
-
-## Functional release checklist
-
-Test the downloaded DMG on a clean macOS 27 account:
-
-- DMG opens and the Applications shortcut works;
-- Gatekeeper accepts the application without a bypass;
-- first-run Accessibility onboarding works;
-- a copy outside `/Applications` refuses to hide icons safely;
-- the folded state shows one main `<` control;
-- the main control reveals regular hidden icons, `|`, and the second `<`;
-- the second control reveals and hides always-hidden icons without moving itself;
-- moving `|` and ending Arrange mode reclassifies icons correctly;
-- repeated folding preserves the Command-dragged order;
-- behavior is consistent on a notched MacBook display and non-notched external displays;
-- connecting, disconnecting, and vertically arranging displays refreshes safely;
-- auto fold, hover reveal, global shortcut, and launch at login work;
-- microphone and camera activity releases the restriction;
-- English and Polish layouts fit;
-- revoking Accessibility fails open and shows the full menu bar.
-
-## Common failures
-
-`A Developer ID Application certificate is required`
-
-: The imported `.p12` contains an Apple Development certificate, lacks the private key, or was exported incorrectly.
-
-`Missing APP_STORE_CONNECT_API_* secret`
-
-: One of the team API key values is absent. An individual API key cannot replace it for `notarytool`.
-
-`Invalid` from `notarytool`
-
-: Open the submission log shown by `notarytool`. Typical causes are the wrong certificate type, missing Hardened Runtime, an invalid timestamp, or accidentally enabled debug entitlements.
-
-`Resource fork, Finder information, or similar detritus not allowed`
-
-: A file in the app bundle contains extended metadata. Recreate the bundle from a clean checkout instead of modifying the packaged app in Finder.
-
-Gatekeeper accepts the DMG but Accessibility resets after every update
-
-: Confirm that the bundle identifier and Developer ID identity did not change between releases. Users should replace the application in `/Applications`, not run it directly from the mounted DMG.
+That mode submits the DMG, waits for Apple, staples the ticket, and runs a Gatekeeper assessment. It is intentionally not used by the default GitHub workflow.
 
 ## References
 
+- [Apple: Safely open apps on your Mac](https://support.apple.com/en-us/102445)
 - [Apple: Notarizing macOS software before distribution](https://developer.apple.com/documentation/security/notarizing-macos-software-before-distribution)
-- [Apple: Customizing the notarization workflow](https://developer.apple.com/documentation/security/customizing-the-notarization-workflow)
-- [GitHub: Installing an Apple certificate on macOS runners](https://docs.github.com/en/actions/how-tos/deploy/deploy-to-third-party-platforms/sign-xcode-applications)
+- [Apple: Developer ID certificates](https://developer.apple.com/help/account/certificates/create-developer-id-certificates)
+- [Apple: Code Signing Requirement Language](https://developer.apple.com/library/archive/documentation/Security/Conceptual/CodeSigningGuide/RequirementLang/RequirementLang.html)
 - [GitHub: Managing releases in a repository](https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository)

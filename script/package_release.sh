@@ -4,9 +4,9 @@ set -euo pipefail
 APP_NAME="MenuBarFold"
 APP_VERSION="${1:-${APP_VERSION:-}}"
 BUILD_NUMBER="${BUILD_NUMBER:-1}"
-SWIFT_BUILD_ARCHS="${SWIFT_BUILD_ARCHS:-arm64 x86_64}"
-REQUIRE_DEVELOPER_ID="${REQUIRE_DEVELOPER_ID:-1}"
-SKIP_NOTARIZATION="${SKIP_NOTARIZATION:-0}"
+SWIFT_BUILD_ARCHS="${SWIFT_BUILD_ARCHS:-arm64}"
+REQUIRE_DEVELOPER_ID="${REQUIRE_DEVELOPER_ID:-0}"
+SKIP_NOTARIZATION="${SKIP_NOTARIZATION:-1}"
 SIGNING_IDENTITY="${CODE_SIGN_IDENTITY:-}"
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -48,6 +48,11 @@ resolve_signing_identity
 
 if [[ "$REQUIRE_DEVELOPER_ID" == "1" && "$SIGNING_IDENTITY" != Developer\ ID\ Application:* ]]; then
   echo "A Developer ID Application certificate is required for a public release." >&2
+  exit 1
+fi
+
+if [[ "$SKIP_NOTARIZATION" != "1" && "$SIGNING_IDENTITY" != Developer\ ID\ Application:* ]]; then
+  echo "Notarization requires a Developer ID Application certificate." >&2
   exit 1
 fi
 
@@ -101,7 +106,7 @@ fi
 /usr/bin/codesign --verify --strict --verbose=2 "$DMG_PATH"
 
 if [[ "$SKIP_NOTARIZATION" == "1" ]]; then
-  echo "Warning: notarization was skipped; this DMG is for local validation only." >&2
+  echo "Warning: this DMG is not notarized and will require manual approval in Privacy & Security." >&2
 else
   /usr/bin/xcrun notarytool submit "$DMG_PATH" \
     --key "$NOTARYTOOL_KEY" \

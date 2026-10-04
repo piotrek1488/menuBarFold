@@ -10,4 +10,4 @@
 
 Do not add network dependencies, analytics, private entitlements, or App Sandbox without first explaining how the macOS 27 hiding mechanism will continue to work.
 
-Public releases are created only from annotated `vMAJOR.MINOR.PATCH` tags. Do not upload locally ad-hoc-signed DMG files. Follow [docs/RELEASING.md](docs/RELEASING.md) so GitHub Actions can apply Developer ID signing, notarization, stapling, and checksum generation.
+Public releases are created only from annotated `vMAJOR.MINOR.PATCH` tags. Use [docs/RELEASING.md](docs/RELEASING.md) and the GitHub workflow so every free, ad-hoc-signed DMG is reproducible, clearly labelled as unnotarized, and accompanied by a checksum. Never describe a release as notarized unless the optional Developer ID flow was actually used and verified.
