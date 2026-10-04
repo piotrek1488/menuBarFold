@@ -96,7 +96,7 @@
 "menu.quit" = "Quit MenuBarFold";
 
 "about.tagline" = "A focused menu bar for macOS 27";
-"about.version" = "Version 0.1.0";
+"about.version" = "Version %@";
 "about.privacy.title" = "Local by design";
 "about.privacy.detail" = "MenuBarFold has no network code, analytics, account, file access, or subprocesses. Accessibility data is used in memory only to classify menu bar item positions.";
 "about.macos27.title" = "Why this build is outside the App Store";

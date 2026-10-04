@@ -1,60 +1,130 @@
 # MenuBarFold
 
-MenuBarFold to natywna aplikacja dla macOS 27, która porządkuje ikony na górnym pasku. Użytkownik sam wybiera, które aplikacje mają być zawsze widoczne, które pojawiają się dopiero po rozwinięciu i które mają pozostać ukryte. Domyślnym językiem jest angielski; w ustawieniach można wybrać polski albo język systemu.
+MenuBarFold to natywna aplikacja dla macOS 27, która porządkuje ikony na górnym pasku. Użytkownik sam wybiera, które aplikacje mają być zawsze widoczne, które pojawiają się po rozwinięciu głównej sekcji, a które pozostają za osobnym przyciskiem sekcji „Zawsze ukryte”.
 
-## Co potrafi
+Aplikacja jest napisana w Swift, SwiftUI i AppKit. Domyślnym językiem jest angielski, a polski można wybrać w ustawieniach.
 
-- Zwijanie i rozwijanie zwykłych ukrytych ikon strzałką MenuBarFold, która zawsze pozostaje widoczna.
-- Układanie ikon przez `Command + przeciągnięcie`.
-- Osobna kompaktowa strzałka dla ikon zawsze ukrytych. Pojawia się dopiero po rozwinięciu zwykłej sekcji i pozostaje w stałym miejscu podczas pokazywania lub ukrywania tej strefy.
+## Pobieranie i instalacja
+
+1. Pobierz najnowszy plik `MenuBarFold-<wersja>.dmg` z [GitHub Releases](../../../releases/latest).
+2. Otwórz DMG i przeciągnij **MenuBarFold** na skrót **Applications**.
+3. Uruchom `/Applications/MenuBarFold.app`.
+4. Przyznaj dostęp w **Ustawienia systemowe → Prywatność i bezpieczeństwo → Dostępność**.
+5. Wybierz **Ułóż ikony** i ustaw trzy strefy paska menu.
+
+Publiczny DMG jest podpisany certyfikatem Developer ID, sprawdzony przez usługę notaryzacji Apple i ma dołączoną sumę SHA-256. Aplikacja musi pozostać w systemowym katalogu `/Applications`; kopia uruchomiona z innego miejsca celowo nie włączy filtrowania ikon.
+
+Używamy DMG zamiast instalatora PKG, ponieważ MenuBarFold jest jedną samodzielną aplikacją. Oba formaty wymagają notaryzacji, a PKG dołożyłby osobny certyfikat Developer ID Installer bez poprawy tego sposobu instalacji. Szczegóły są w [instrukcji wydania](RELEASING.pl.md).
+
+## Obecne działanie paska
+
+Przytrzymaj Command i ułóż elementy w takiej kolejności:
+
+```text
+ikony zawsze ukryte   |   zwykłe ukryte ikony   <   ikony zawsze widoczne
+```
+
+Przyciski działają następująco:
+
+| Stan | Widoczne elementy |
+| --- | --- |
+| Wszystko zwinięte | Tylko główny przycisk `<` i ikony zawsze widoczne |
+| Otwarta zwykła sekcja | Zwykłe ukryte ikony, separator `|`, drugi przycisk `<` i główny przycisk `>` |
+| Otwarta sekcja „Zawsze ukryte” | Obie ukryte sekcje są widoczne, a drugi przycisk zmienia się w `>` |
+| Kliknięcie głównego `>` | Obie ukryte sekcje zostają zwinięte i pozostaje tylko główny `<` |
+
+Drugi przycisk celowo pozostaje w jednym miejscu po rozwinięciu sekcji „Zawsze ukryte”. Przenoszenie go za ostatnią ikonę wymagałoby ponownego układania elementów przez macOS po każdym kliknięciu.
+
+MenuBarFold nie wymusza już systemowego przycisku `«` i nie tworzy sztucznych elementów poszerzających pasek. Główna strzałka, separator oraz druga strzałka mają stałą tożsamość przez cały czas działania aplikacji. Dzięki temu sama aplikacja nie przestawia ikon podczas zwijania, a zachowanie jest takie samo na ekranie MacBooka z notchem, monitorach bez notcha i w układach z wieloma ekranami.
+
+Po aktualizacji ze starszej wersji, która używała systemowego overflow, wejdź raz w **Ułóż ikony** i ustaw właściwą kolejność. Następne zwinięcia nie tworzą już elementów paska od nowa.
+
+## Funkcje
+
+- Osobne sekcje ikon zwykle ukrytych i zawsze ukrytych.
+- Główna strzałka, która pozostaje dostępna przy zwiniętym pasku.
+- Stała druga strzałka, pojawiająca się dopiero po otwarciu zwykłej sekcji.
+- Układanie ikon przez Command + przeciągnięcie z separatorem `|`.
 - Automatyczne zwijanie po wybranym czasie.
 - Rozwijanie po najechaniu kursorem.
-- Globalny skrót klawiszowy.
+- Globalne skróty klawiaturowe.
 - Uruchamianie po zalogowaniu.
-- Obsługa wielu monitorów.
-- Ochrona wskaźników użycia mikrofonu i kamery.
-- Interfejs po angielsku i polsku, Dark Mode oraz etykiety VoiceOver.
-- Brak analityki, sieci, konta, odczytu plików i procesu pomocniczego.
+- Obsługa wielu monitorów, z notchem i bez notcha.
+- Bezpieczne odświeżanie po zmianie ekranów, wybudzeniu oraz uruchomieniu lub zamknięciu aplikacji.
+- Ochrona wskaźników mikrofonu i kamery przez tymczasowe pokazanie całego paska.
+- Interfejs po angielsku i polsku, Dark Mode, nawigacja klawiaturą i etykiety VoiceOver.
+- Brak analityki, sieci, konta, procesu pomocniczego i komend powłoki w aplikacji.
 
-## Jak używać
+## Dlaczego macOS 27 wymaga nowego rozwiązania
 
-1. Umieść aplikację w systemowym katalogu `/Applications` (czyli `Aplikacje`) i uruchom ją stamtąd. Jest to wymagane w macOS 27; kopia uruchomiona z innego katalogu nie włączy ukrywania, aby nie zniknęły jej własne przyciski.
-2. Przyznaj jej dostęp w `Ustawienia systemowe → Prywatność i bezpieczeństwo → Dostępność`.
-3. Przytrzymaj `Command` i ustaw ikony zawsze ukryte po lewej stronie separatora `|`.
-4. Zwykłe ukryte ikony ustaw między separatorem `|` i główną strzałką, a widoczne ikony po prawej stronie głównej strzałki.
-5. Główna strzałka MenuBarFold `<` rozwija zwykłe ukryte ikony i zmienia się w `>`. Dopiero wtedy pojawia się druga strzałka `<`, która rozwija ikony zawsze ukryte i po rozwinięciu zmienia się w `>`.
-6. Kliknij strzałkę prawym przyciskiem, aby otworzyć szybkie menu. `Option + klik` włącza tryb układania.
+macOS 27 zmienił wewnętrzną budowę paska menu. Poszerzanie separatora nie ukrywa już niezawodnie sąsiednich ikon, a MenuBarAgent nie udostępnia dawnego układu osobnych okien dla każdej ikony. MenuBarFold odczytuje właściciela i położenie elementów przez Accessibility, a następnie dynamicznie używa mechanizmu widoczności z macOS 27, aby dopuścić tylko potrzebne aplikacje.
 
-## Budowanie
+Ten mechanizm jest prywatny i nie działa w aplikacji z sandboxem App Store. MenuBarFold ładuje go dopiero podczas działania i stosuje zasadę „fail open”: jeśli uprawnienie, framework, geometria ekranów albo klasyfikacja ikon są niepewne, ograniczenie zostaje zwolnione i pojawia się cały pasek.
 
-Projekt był testowany na macOS 27.0.1, Xcode 27 i Swift 6.4.
+## Wymagania
+
+- macOS 27.0 lub nowszy.
+- Przyznane uprawnienie Accessibility.
+- Instalacja w systemowym katalogu `/Applications`.
+- Dystrybucja bezpośrednia poza Mac App Store i bez App Sandbox.
+- Stały podpis aplikacji. Wydania używają Developer ID; lokalny build wybiera dostępny certyfikat deweloperski, a w ostateczności podpis tymczasowy.
+
+Kod można kompilować na macOS 14+ w zwykłym CI. Publiczne wydanie powstaje na runnerze GitHub `xcode-27` i deklaruje macOS 27 jako minimalną wersję systemu.
+
+## Lokalne budowanie i uruchamianie
+
+Testowane środowisko to macOS 27, Xcode 27 i Swift 6.4.
 
 ```sh
+git clone <adres-repozytorium>
+cd MenuBarFold
 ./script/build_and_run.sh --verify
 ```
 
-Gotowa aplikacja powstanie w `dist/MenuBarFold.app`. Skrypt tworzy pakiet `.app`, kopiuje tłumaczenia, generuje ikonę, podpisuje wersję deweloperską, instaluje tę samą podpisaną kopię jako `/Applications/MenuBarFold.app` i sprawdza, czy proces się uruchomił.
+Skrypt buduje `dist/MenuBarFold.app`, podpisuje aplikację pierwszym dostępnym lokalnym certyfikatem, instaluje dokładnie ten pakiet jako `/Applications/MenuBarFold.app`, uruchamia go i sprawdza proces.
 
-Testy i diagnostyka:
+Przydatne polecenia:
 
 ```sh
 ./script/build_and_run.sh --test
 ./script/build_and_run.sh --diagnose
+./script/build_and_run.sh --logs
+./script/build_and_run.sh --telemetry
 ```
+
+Ekran „O aplikacji” odczytuje wersję z `CFBundleShortVersionString`, więc pokazuje numer lokalnego buildu albo taga wydania.
+
+## Publikowanie wydania DMG
+
+Repozytorium zawiera [workflow wydania](../.github/workflows/release.yml), który:
+
+1. pobiera istniejący tag `vMAJOR.MINOR.PATCH`;
+2. uruchamia testy na runnerze `xcode-27`;
+3. importuje certyfikat Developer ID Application z sekretów GitHub Actions;
+4. buduje uniwersalną aplikację `arm64 + x86_64` z Hardened Runtime;
+5. tworzy, podpisuje, notaryzuje i stapluje DMG;
+6. generuje sumę SHA-256;
+7. tworzy GitHub Release i dodaje oba pliki.
+
+Po jednorazowej konfiguracji certyfikatu i sekretów opisanej w [instrukcji wydania](RELEASING.pl.md) nową wersję publikuje się tak:
+
+```sh
+git tag -a v0.2.0 -m "MenuBarFold 0.2.0"
+git push origin v0.2.0
+```
+
+Workflow można również uruchomić ponownie ręcznie dla istniejącego taga przez **Actions → Release DMG**.
 
 ## Ograniczenia macOS 27
 
-Apple nie udostępnia publicznego API do ukrywania ikon innych aplikacji. Mechanizm dostępny w macOS 27 jest częścią trybu assessment, dlatego aplikacja musi być dystrybuowana poza App Store i działać bez sandboxa.
+- Ukrywanie działa na poziomie całej aplikacji, nie pojedynczej ikony. Jeżeli jedna aplikacja ma kilka ikon, wygrywa jej najbardziej widoczne położenie.
+- Elementy systemowe Apple, takie jak zegar, Centrum sterowania, Wi-Fi, dźwięk i bateria, pozostają widoczne.
+- Now Playing i Live Activities mogą zniknąć podczas aktywnego ograniczenia.
+- Kliknięcie zegara może nie otworzyć Centrum powiadomień do czasu rozwinięcia paska.
+- Ostateczną kolejnością nadal zarządza macOS. MenuBarFold nie rejestruje ponownie swoich kontrolek podczas zwijania, ale nie może zabronić systemowi lub innej aplikacji odtworzenia albo przesunięcia ikony po restarcie czy zmianie ekranów.
+- Systemowy przycisk `«` może pojawić się naturalnie, gdy macOS zabraknie miejsca. MenuBarFold go nie ustawia i nim nie steruje.
+- Przyszła aktualizacja macOS może zmienić albo usunąć prywatny mechanizm widoczności.
 
-Podczas zwinięcia:
+Podczas użycia mikrofonu lub kamery MenuBarFold zwalnia ograniczenie, aby zachować systemowy wskaźnik prywatności. macOS nie udostępnia publicznego API do wykrywania nagrywania ekranu przez inną aplikację, więc szeroki wskaźnik nagrywania nie może korzystać z tej samej ochrony.
 
-- ukrywanie działa na poziomie całej aplikacji, nie pojedynczej ikony;
-- elementy systemowe Apple pozostają widoczne;
-- Now Playing i Live Activities mogą zniknąć;
-- kliknięcie zegara może nie otworzyć Centrum powiadomień do czasu rozwinięcia paska;
-- macOS nadal zarządza końcową kolejnością paska. MenuBarFold zachowuje stałe identyfikatory swoich elementów i nie rejestruje ich ponownie podczas zwijania, ale nie może zablokować zmian wykonanych przez system lub inną aplikację po restarcie albo zmianie ekranów;
-- przyszła aktualizacja macOS może zmienić prywatny mechanizm.
-
-MenuBarFold stosuje zasadę „fail open”. Jeśli czegoś nie może ustalić bezpiecznie, pokazuje cały pasek. Podczas użycia mikrofonu lub kamery także zwalnia ograniczenie, aby zachować systemowe wskaźniki prywatności.
-
-Więcej szczegółów zawierają dokumenty [Architektura](ARCHITECTURE.md) i [Wydanie aplikacji](RELEASING.md).
+Więcej informacji zawierają dokumenty [Architektura](ARCHITECTURE.md), [Wydawanie aplikacji](RELEASING.pl.md), [Contributing](../CONTRIBUTING.md) i [Security](../SECURITY.md).

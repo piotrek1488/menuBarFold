@@ -8,3 +8,5 @@ xcuserdata/
 DerivedData/
 *.xcuserstate
 *.zip
+*.dmg
+*.sha256

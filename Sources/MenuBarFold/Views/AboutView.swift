@@ -21,7 +21,13 @@ struct AboutView: View {
               .font(.largeTitle.bold())
             Text(L10n.string("about.tagline", language: model.language))
               .foregroundStyle(.secondary)
-            Text(L10n.string("about.version", language: model.language))
+            Text(
+              L10n.formatted(
+                "about.version",
+                language: model.language,
+                arguments: appVersion
+              )
+            )
               .font(.caption)
               .foregroundStyle(.tertiary)
           }
@@ -54,5 +60,10 @@ struct AboutView: View {
       .padding(28)
       .frame(maxWidth: 680, alignment: .leading)
     }
+  }
+
+  private var appVersion: String {
+    Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
+      ?? "development"
   }
 }

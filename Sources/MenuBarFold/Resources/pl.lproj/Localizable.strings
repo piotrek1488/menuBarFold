@@ -96,7 +96,7 @@
 "menu.quit" = "Zakończ MenuBarFold";
 
 "about.tagline" = "Uporządkowany pasek menu w macOS 27";
-"about.version" = "Wersja 0.1.0";
+"about.version" = "Wersja %@";
 "about.privacy.title" = "Wszystko zostaje na Macu";
 "about.privacy.detail" = "MenuBarFold nie ma kodu sieciowego, analityki, konta, dostępu do plików ani procesów pomocniczych. Dane Accessibility są używane wyłącznie w pamięci do ustalenia położenia ikon.";
 "about.macos27.title" = "Dlaczego tej wersji nie będzie w App Store";

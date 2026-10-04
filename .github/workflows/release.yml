@@ -1,0 +1,163 @@
+name: Release DMG
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag, for example v0.2.0
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+env:
+  RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+
+jobs:
+  release:
+    name: Build, notarize, and publish
+    runs-on: xcode-27
+    timeout-minutes: 45
+
+    steps:
+      - name: Check out release tag
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          ref: ${{ env.RELEASE_TAG }}
+
+      - name: Validate release tag
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ ! "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Release tag must look like v0.2.0." >&2
+            exit 1
+          fi
+          git rev-parse --verify "refs/tags/$RELEASE_TAG^{commit}" >/dev/null
+          release_version="${RELEASE_TAG#v}"
+          echo "RELEASE_VERSION=$release_version" >>"$GITHUB_ENV"
+          echo "DMG_PATH=$GITHUB_WORKSPACE/dist/MenuBarFold-$release_version.dmg" >>"$GITHUB_ENV"
+          echo "CHECKSUM_PATH=$GITHUB_WORKSPACE/dist/MenuBarFold-$release_version.dmg.sha256" >>"$GITHUB_ENV"
+
+      - name: Run tests
+        run: ./script/build_and_run.sh --test
+
+      - name: Install Developer ID certificate
+        shell: bash
+        env:
+          BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+          P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          set -euo pipefail
+          : "${BUILD_CERTIFICATE_BASE64:?Missing BUILD_CERTIFICATE_BASE64 secret}"
+          : "${P12_PASSWORD:?Missing P12_PASSWORD secret}"
+          : "${KEYCHAIN_PASSWORD:?Missing KEYCHAIN_PASSWORD secret}"
+
+          certificate_path="$RUNNER_TEMP/developer-id-application.p12"
+          keychain_path="$RUNNER_TEMP/app-signing.keychain-db"
+          printf '%s' "$BUILD_CERTIFICATE_BASE64" | base64 --decode -o "$certificate_path"
+
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$keychain_path"
+          security set-keychain-settings -lut 21600 "$keychain_path"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$keychain_path"
+          security import "$certificate_path" \
+            -P "$P12_PASSWORD" \
+            -A \
+            -t cert \
+            -f pkcs12 \
+            -k "$keychain_path"
+          security set-key-partition-list \
+            -S apple-tool:,apple: \
+            -k "$KEYCHAIN_PASSWORD" \
+            "$keychain_path"
+          security list-keychains -d user -s "$keychain_path"
+
+          signing_identity="$({
+            security find-identity -v -p codesigning "$keychain_path" || true
+          } | awk -F'"' '/Developer ID Application:/ { print $2; exit }')"
+          if [[ -z "$signing_identity" ]]; then
+            echo "The imported certificate is not a Developer ID Application identity." >&2
+            exit 1
+          fi
+          echo "CODE_SIGN_IDENTITY=$signing_identity" >>"$GITHUB_ENV"
+
+      - name: Prepare notarization credentials
+        shell: bash
+        env:
+          API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+          API_KEY_P8: ${{ secrets.APP_STORE_CONNECT_API_KEY_P8 }}
+        run: |
+          set -euo pipefail
+          : "${API_KEY_ID:?Missing APP_STORE_CONNECT_API_KEY_ID secret}"
+          : "${API_ISSUER_ID:?Missing APP_STORE_CONNECT_API_ISSUER_ID secret}"
+          : "${API_KEY_P8:?Missing APP_STORE_CONNECT_API_KEY_P8 secret}"
+
+          api_key_path="$RUNNER_TEMP/AuthKey_$API_KEY_ID.p8"
+          printf '%s' "$API_KEY_P8" >"$api_key_path"
+          chmod 600 "$api_key_path"
+          echo "NOTARYTOOL_KEY=$api_key_path" >>"$GITHUB_ENV"
+          echo "NOTARYTOOL_KEY_ID=$API_KEY_ID" >>"$GITHUB_ENV"
+          echo "NOTARYTOOL_ISSUER_ID=$API_ISSUER_ID" >>"$GITHUB_ENV"
+
+      - name: Build and notarize universal DMG
+        shell: bash
+        env:
+          SWIFT_BUILD_ARCHS: arm64 x86_64
+          BUILD_NUMBER: ${{ github.run_number }}
+        run: ./script/package_release.sh "$RELEASE_VERSION"
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: MenuBarFold-${{ env.RELEASE_VERSION }}
+          path: |
+            ${{ env.DMG_PATH }}
+            ${{ env.CHECKSUM_PATH }}
+          if-no-files-found: error
+          compression-level: 0
+
+      - name: Publish GitHub release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" \
+              "$DMG_PATH" \
+              "$CHECKSUM_PATH" \
+              --clobber
+            gh release edit "$RELEASE_TAG" \
+              --title "MenuBarFold $RELEASE_VERSION" \
+              --draft=false
+          else
+            gh release create "$RELEASE_TAG" \
+              "$DMG_PATH" \
+              "$CHECKSUM_PATH" \
+              --verify-tag \
+              --generate-notes \
+              --title "MenuBarFold $RELEASE_VERSION" \
+              --draft
+            gh release edit "$RELEASE_TAG" --draft=false
+          fi
+
+      - name: Clean up signing material
+        if: ${{ always() }}
+        shell: bash
+        run: |
+          security delete-keychain "$RUNNER_TEMP/app-signing.keychain-db" 2>/dev/null || true
+          rm -f \
+            "$RUNNER_TEMP/developer-id-application.p12" \
+            "$RUNNER_TEMP"/AuthKey_*.p8

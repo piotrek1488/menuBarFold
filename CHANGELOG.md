@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Added a tag-driven GitHub Actions release flow for signed, notarized universal DMG files.
+- Added reusable app-bundle and release-packaging scripts.
+- Made the About version follow the built bundle version.
+- Updated English and Polish installation, behavior, and release documentation.
+
 ## 0.1.0
 
 - Initial macOS 27 implementation.
